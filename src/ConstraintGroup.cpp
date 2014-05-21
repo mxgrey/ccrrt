@@ -8,18 +8,17 @@ ConstraintGroup::ConstraintGroup()
     _dimension = 0;
 }
 
-bool ConstraintGroup::fillJacobian(Eigen::MatrixXd &H,
-                                   const Trajectory& traj)
+bool ConstraintGroup::getJacobian(Eigen::MatrixXd& J, const Trajectory& traj)
 {
     bool result = true;
     
-    H.resize(_dimension, traj.xi.size());
+    J.resize(_dimension, traj.xi.size());
     Eigen::MatrixXd Htemp;
     size_t c_counter = 0;
     for(size_t i=0; i<_constraints.size(); ++i)
     {
-        result &= _constraints[i]->fillJacobian(Htemp, traj);
-        H.block(c_counter,0,_constraints[i]->constraintDimension(),traj.xi.size());
+        result &= _constraints[i]->getJacobian(Htemp, traj);
+        J.block(c_counter,0,_constraints[i]->constraintDimension(),traj.xi.size());
         c_counter += _constraints[i]->constraintDimension();
     }
     

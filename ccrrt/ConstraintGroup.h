@@ -12,7 +12,7 @@ public:
     
     ConstraintGroup();
     
-    bool fillJacobian(Eigen::MatrixXd &H, const ccrrt::Trajectory& traj);
+    bool getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj);
     validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj);
     validity_t getValidity(const Trajectory &traj);
     size_t constraintDimension() const;

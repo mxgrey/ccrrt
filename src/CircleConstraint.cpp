@@ -13,11 +13,11 @@ CircleConstraint::CircleConstraint(const Vector2d &mCenter, double mRadius, doub
 
 }
 
-bool CircleConstraint::fillJacobian(MatrixXd &H, const Trajectory& traj)
+bool CircleConstraint::getJacobian(MatrixXd& J, const Trajectory& traj)
 {
     assert( traj.state_space == 0 );
 
-    H.resize(constraintDimension(), traj.xi.size()); // 1 x nm
+    J.resize(constraintDimension(), traj.xi.size()); // 1 x nm
     
     Eigen::Vector2d config;
     Eigen::Vector2d diff;
@@ -31,20 +31,20 @@ bool CircleConstraint::fillJacobian(MatrixXd &H, const Trajectory& traj)
 
         if(norm >= radius+buffer)
         {
-            H.block(0,2*i,1,2).setZero();
+            J.block(0,2*i,1,2).setZero();
         }
         else if(norm >= radius && fabs(buffer) > 1e-10)
         {
             double dist = buffer-(norm-radius);
-            H.block(0,2*i,1,2) = diff.transpose()/norm*dist*dist/(2*buffer);
+            J.block(0,2*i,1,2) = diff.transpose()/norm*dist*dist/(2*buffer);
         }
         else if(norm <= 1e-10)
         {
-            H.block(0,2*i,1,2).setZero();
+            J.block(0,2*i,1,2).setZero();
         }
         else
         {
-            H.block(0,2*i,1,2) = diff.transpose()/norm*(radius-norm + buffer/2);
+            J.block(0,2*i,1,2) = diff.transpose()/norm*(radius-norm + buffer/2);
         }
 
     }

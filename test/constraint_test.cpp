@@ -10,7 +10,7 @@ using namespace Eigen;
 void apply_constraint(Constraint& constraint, Trajectory& traj)
 {
     MatrixXd H;
-    constraint.fillJacobian(H, traj);
+    constraint.getJacobian(H, traj);
     std::cout << H << std::endl;
 }
 

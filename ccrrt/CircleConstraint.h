@@ -12,7 +12,7 @@ public:
     CircleConstraint(const Eigen::Vector2d& mCenter = Eigen::Vector2d::Zero(),
                      double mRadius = 0, double mBuffer = 0);
     
-    bool fillJacobian(Eigen::MatrixXd &H, const ccrrt::Trajectory& traj);
+    bool getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj);
     
     validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj);
 
