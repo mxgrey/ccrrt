@@ -20,6 +20,8 @@ public:
     virtual bool fillJacobian(Eigen::MatrixXd& H, const ccrrt::Trajectory& traj) = 0;
     
     virtual validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj) = 0;
+
+    virtual validity_t getValidity(const ccrrt::Trajectory& traj) = 0;
     
     virtual size_t constraintDimension() const = 0;
 
@@ -27,6 +29,9 @@ public:
     // Counter-argument: Maybe someone will want their own version of speed calculation for a
     //                   certain class of constraints?
     virtual double getSpeed(const ccrrt::Trajectory& traj, size_t waypoint);
+    virtual void getVelocity(Eigen::VectorXd& vel,
+                                    const ccrrt::Trajectory& traj,
+                                    size_t waypoint);
     
 };
 

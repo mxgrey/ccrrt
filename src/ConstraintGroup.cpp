@@ -44,6 +44,21 @@ Constraint::validity_t ConstraintGroup::getCost(Eigen::VectorXd& cost,
     return result;
 }
 
+Constraint::validity_t ConstraintGroup::getValidity(const Trajectory &traj)
+{
+    validity_t result = VALID;
+    validity_t tempresult = VALID;
+
+    for(size_t i=0; i<_constraints.size(); ++i)
+    {
+        tempresult = _constraints[i]->getValidity(traj);
+        if((int)tempresult < (int)result)
+            result = tempresult;
+    }
+
+    return result;
+}
+
 size_t ConstraintGroup::constraintDimension() const
 {
     return _dimension;

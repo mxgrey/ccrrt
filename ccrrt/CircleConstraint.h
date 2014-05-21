@@ -15,6 +15,8 @@ public:
     bool fillJacobian(Eigen::MatrixXd &H, const ccrrt::Trajectory& traj);
     
     validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj);
+
+    validity_t getValidity(const Trajectory &traj);
     
     size_t constraintDimension() const;
     
@@ -25,6 +27,7 @@ public:
 protected:
 
     double _basicCost(const Eigen::Vector2d& config);
+    validity_t _basicValidity(const Eigen::Vector2d& config);
 
 };
 

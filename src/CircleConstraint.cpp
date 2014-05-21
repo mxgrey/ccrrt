@@ -67,7 +67,40 @@ Constraint::validity_t CircleConstraint::getCost(VectorXd& cost, const Trajector
         cost[0] += c*v/traj.waypoints;
     }
 
-    return VALID;
+    return getValidity(traj);
+}
+
+Constraint::validity_t CircleConstraint::getValidity(const Trajectory &traj)
+{
+    validity_t result = VALID;
+    validity_t tempresult = VALID;
+    for(size_t i=0; i<traj.waypoints; ++i)
+    {
+        tempresult = _basicValidity(Vector2d(traj.xi[2*i],traj.xi[1+2*i]));
+        if((int)tempresult < (int)result)
+            result = tempresult;
+    }
+
+    return result;
+}
+
+Constraint::validity_t CircleConstraint::_basicValidity(const Eigen::Vector2d &config)
+{
+    double norm = (config-center).norm();
+    if(norm >= radius+buffer)
+    {
+        return VALID;
+    }
+    else if(norm >= radius && fabs(buffer) > 1e-10)
+    {
+        return AT_RISK;
+    }
+    else
+    {
+        return INVALID;
+    }
+
+    return INVALID;
 }
 
 double CircleConstraint::_basicCost(const Eigen::Vector2d& config)
