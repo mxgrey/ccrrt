@@ -19,6 +19,10 @@ public:
     validity_t getValidity(const Trajectory &traj);
     
     size_t constraintDimension() const;
+
+    static void getAcceleration(Eigen::Vector2d& acc,
+                                const ccrrt::Trajectory& traj,
+                                size_t waypoint);
     
     Eigen::Vector2d center;
     double radius;

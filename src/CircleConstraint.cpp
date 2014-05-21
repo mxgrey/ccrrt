@@ -84,7 +84,7 @@ Constraint::validity_t CircleConstraint::getValidity(const Trajectory &traj)
     return result;
 }
 
-Constraint::validity_t CircleConstraint::_basicValidity(const Eigen::Vector2d &config)
+Constraint::validity_t CircleConstraint::_basicValidity(const Vector2d &config)
 {
     double norm = (config-center).norm();
     if(norm >= radius+buffer)
@@ -103,7 +103,7 @@ Constraint::validity_t CircleConstraint::_basicValidity(const Eigen::Vector2d &c
     return INVALID;
 }
 
-double CircleConstraint::_basicCost(const Eigen::Vector2d& config)
+double CircleConstraint::_basicCost(const Vector2d& config)
 {
     Eigen::Vector2d diff;
 
@@ -131,3 +131,11 @@ size_t CircleConstraint::constraintDimension() const
 {
     return 1;
 }
+
+void CircleConstraint::getAcceleration(Vector2d &acc,
+                                       const Trajectory &traj,
+                                       size_t waypoint)
+{
+
+}
+
