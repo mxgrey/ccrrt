@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
 project(ccrrt)
 
-include_directories(${OpenSceneGraph_INCLUDE_DIRS})
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+find_package(Eigen REQUIRED)
+include_directories(${Eigen_INCLUDE_DIRS})
 
 add_definitions("-Wall")
 

@@ -1,44 +1,97 @@
 
 #include "../ccrrt/CircleConstraint.h"
+#include <iostream>
 
 using namespace ccrrt;
+using namespace Eigen;
 
-CircleConstraint::CircleConstraint(const Eigen::Vector2d &center, double radius) :
-    _center(center),
-    _radius(radius)
+CircleConstraint::CircleConstraint(const Vector2d &mCenter, double mRadius, double mBuffer) :
+    center(mCenter),
+    radius(mRadius),
+    buffer(mBuffer)
 {
-    
+
 }
 
-bool CircleConstraint::fillJacobian(Eigen::MatrixXd &H,
-                                    const Eigen::VectorXd &xi, 
-                                    size_t numWaypoints)
+bool CircleConstraint::fillJacobian(MatrixXd &H, const Trajectory& traj)
 {
-    assert( xi.size()%numWaypoints == 0 );
-    
-    size_t config_size = xi.size()/numWaypoints;
-    assert( config_size == 2 );
+    assert( traj.state_space == 0 );
+
+    H.resize(constraintDimension(), traj.xi.size()); // 1 x nm
     
     Eigen::Vector2d config;
     Eigen::Vector2d diff;
-    for(size_t i=0; i<numWaypoints; ++i)
+    for(size_t i=0; i<traj.waypoints; ++i)
     {
-        config[0] = xi[0+2*i];
-        config[1] = xi[1+2*i];
+        config[0] = traj.xi[0+2*i];
+        config[1] = traj.xi[1+2*i];
         
-        diff = config - _center;
-//        if(diff.norm() > _radius)
+        diff = config - center;
+        double norm = diff.norm();
+
+        if(norm >= radius+buffer)
+        {
+            H.block(0,2*i,1,2).setZero();
+        }
+        else if(norm >= radius && fabs(buffer) > 1e-10)
+        {
+            double dist = buffer-(norm-radius);
+            H.block(0,2*i,1,2) = diff.transpose()/norm*dist*dist/(2*buffer);
+        }
+        else if(norm <= 1e-10)
+        {
+            H.block(0,2*i,1,2).setZero();
+        }
+        else
+        {
+            H.block(0,2*i,1,2) = diff.transpose()/norm*(radius-norm + buffer/2);
+        }
+
     }
     
     return true;
 }
 
-Constraint::validity_t CircleConstraint::configValidity(Eigen::VectorXd& lambda,
-                                                        const Eigen::VectorXd &xi, 
-                                                        size_t numWaypoints)
+Constraint::validity_t CircleConstraint::getCost(VectorXd& cost, const Trajectory& traj)
 {
-    
+    cost.resize(1); // 1 x nm
+
+    cost[0] = 0;
+
+    const VectorXd& xi = traj.xi;
+    for(size_t i=0; i<traj.waypoints; ++i)
+    {
+        double c = _basicCost(Vector2d(xi[2*i],xi[1+2*i]));
+        double v = getSpeed(traj, i);
+
+        cost[0] += c*v/traj.waypoints;
+    }
+
     return VALID;
+}
+
+double CircleConstraint::_basicCost(const Eigen::Vector2d& config)
+{
+    Eigen::Vector2d diff;
+
+    diff = config - center;
+    double norm = diff.norm();
+
+    if(norm >= radius+buffer)
+    {
+        return 0;
+    }
+    else if(norm >= radius && fabs(buffer) > 1e-10)
+    {
+        double dist = buffer-(norm-radius);
+        return dist*dist/(2*buffer);
+    }
+    else
+    {
+        return radius-norm + buffer/2;
+    }
+
+    return 0;
 }
 
 size_t CircleConstraint::constraintDimension() const

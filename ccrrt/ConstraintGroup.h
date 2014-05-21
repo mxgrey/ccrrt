@@ -12,10 +12,8 @@ public:
     
     ConstraintGroup();
     
-    bool fillJacobian(Eigen::MatrixXd &H, const Eigen::VectorXd &xi, size_t numWaypoints);
-    validity_t configValidity(Eigen::VectorXd& lambda, 
-                              const Eigen::VectorXd &xi, 
-                              size_t numWaypoints);
+    bool fillJacobian(Eigen::MatrixXd &H, const ccrrt::Trajectory& traj);
+    validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj);
     size_t constraintDimension() const;
     
     void addConstraint(Constraint* constraint);

@@ -1,14 +1,39 @@
 
 #include "../ccrrt/Constraint.h"
 
+#include <iostream>
+
 using namespace ccrrt;
+using namespace Eigen;
 
-bool Constraint::fillJacobian(Eigen::MatrixXd &, const Eigen::VectorXd &, size_t )
+double Constraint::getSpeed(const Trajectory &traj, size_t waypoint)
 {
-    return true;
-}
+    double d = 0;
 
-Constraint::validity_t Constraint::configValidity(Eigen::VectorXd& , const Eigen::VectorXd&, size_t )
-{
-    return VALID;
+    size_t s = traj.state_space;
+
+    const VectorXd& xi = traj.xi;
+    const VectorXd& start = traj.start;
+    const VectorXd& end = traj.end;
+    if(waypoint == 0 && traj.waypoints == 1)
+    {
+        d = (end - xi).norm() + (xi - start).norm();
+    }
+    else if(waypoint == 0)
+    {
+        d = (xi.block(s,0,s,1) - xi.block(0,0,s,1)).norm()
+                + (xi.block(0,0,s,1) - start).norm();
+    }
+    else if(waypoint==traj.waypoints-1)
+    {
+        d = (traj.end - xi.block(s*(waypoint),0,s,1)).norm()
+                + (xi.block(s*(waypoint),0,s,1) - xi.block(s*(waypoint-1),0,s,1)).norm();
+    }
+    else
+    {
+        d = (xi.block(s*(waypoint+1),0,s,1) - xi.block(s*(waypoint),0,s,1)).norm()
+                + (xi.block(s*(waypoint),0,s,1) - xi.block(s*(waypoint-1),0,s,1)).norm();
+    }
+
+    return d/(2*traj.waypoints);
 }
