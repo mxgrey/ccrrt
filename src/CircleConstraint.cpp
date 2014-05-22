@@ -15,41 +15,43 @@ CircleConstraint::CircleConstraint(const Vector2d &mCenter, double mRadius, doub
 
 bool CircleConstraint::getJacobian(MatrixXd& J, const Trajectory& traj)
 {
-    assert( traj.state_space == 0 );
+    assert( traj.state_space == 2 );
 
     J.resize(constraintDimension(), traj.xi.size()); // 1 x nm
     
-    Eigen::Vector2d config;
-    Eigen::Vector2d diff;
+    Matrix<double,1,2> Jtemp;
     for(size_t i=0; i<traj.waypoints; ++i)
     {
-        config[0] = traj.xi[0+2*i];
-        config[1] = traj.xi[1+2*i];
-        
-        diff = config - center;
-        double norm = diff.norm();
-
-        if(norm >= radius+buffer)
-        {
-            J.block(0,2*i,1,2).setZero();
-        }
-        else if(norm >= radius && fabs(buffer) > 1e-10)
-        {
-            double dist = buffer-(norm-radius);
-            J.block(0,2*i,1,2) = diff.transpose()/norm*dist*dist/(2*buffer);
-        }
-        else if(norm <= 1e-10)
-        {
-            J.block(0,2*i,1,2).setZero();
-        }
-        else
-        {
-            J.block(0,2*i,1,2) = diff.transpose()/norm*(radius-norm + buffer/2);
-        }
-
+        _basicJacobian(Jtemp, traj, i);
+        J.block(0,2*i,1,2) = Jtemp;
     }
     
     return true;
+}
+
+void CircleConstraint::_basicJacobian(Eigen::Matrix<double,1,2> &J, 
+                                      const Trajectory &traj, 
+                                      size_t waypoint)
+{
+    Vector2d config = Vector2d(traj.xi[2*waypoint],traj.xi[2*waypoint+1]);
+    
+    Vector2d grad_c;
+    _basicCostGrad(grad_c, config);
+    
+    double c = _basicCost(config);
+    
+    VectorXd vel;
+    getVelocity(vel, traj, waypoint);
+    double vel_norm = vel.norm();
+    Vector2d unit_vel = Vector2d(vel[0],vel[1]).normalized();
+    
+    VectorXd accel;
+    getAcceleration(accel, traj, waypoint);
+    
+    Matrix2d projection = Matrix2d::Identity()-unit_vel*unit_vel.transpose();
+    Vector2d k = 1/(vel_norm*vel_norm)*projection*accel;
+    
+    J = vel_norm*projection*grad_c - c*k;
 }
 
 Constraint::validity_t CircleConstraint::getCost(VectorXd& cost, const Trajectory& traj)
@@ -127,15 +129,32 @@ double CircleConstraint::_basicCost(const Vector2d& config)
     return 0;
 }
 
+void CircleConstraint::_basicCostGrad(Eigen::Vector2d& grad_c, const Eigen::Vector2d& config)
+{
+    grad_c = config - center;
+    double norm = grad_c.norm();
+    
+    if(norm >= radius+buffer)
+    {
+        grad_c.setZero();
+    }
+    else if(norm >= radius && fabs(buffer) > 1e-10)
+    {
+        grad_c = grad_c/norm*(norm-radius-buffer)/buffer;
+    }
+    else if(norm > 1e-10)
+    {
+        grad_c = -grad_c/norm;
+    }
+    else
+    {
+        grad_c.setZero();
+    }
+}
+
 size_t CircleConstraint::constraintDimension() const
 {
     return 1;
 }
 
-void CircleConstraint::getAcceleration(Vector2d &acc,
-                                       const Trajectory &traj,
-                                       size_t waypoint)
-{
-
-}
 

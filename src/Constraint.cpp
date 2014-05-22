@@ -65,5 +65,34 @@ void Constraint::getVelocity(Eigen::VectorXd& vel, const Trajectory& traj, size_
                 + (xi.block(s*(waypoint),0,s,1) - xi.block(s*(waypoint-1),0,s,1));
     }
 
-    vel = vel/(2*traj.waypoints);
+    vel = vel*(2*traj.waypoints);
+}
+
+void Constraint::getAcceleration(Eigen::VectorXd &accel, const Trajectory &traj, size_t waypoint)
+{
+    size_t s = traj.state_space;
+
+    const VectorXd& xi = traj.xi;
+    const VectorXd& start = traj.start;
+    const VectorXd& end = traj.end;
+    if(waypoint == 0 && traj.waypoints == 1)
+    {
+        accel = end - 2*xi + start;
+    }
+    else if(waypoint == 0)
+    {
+        accel = xi.block(s,0,s,1) - 2*xi.block(0,0,s,1) + start;
+    }
+    else if(waypoint==traj.waypoints-1)
+    {
+        accel = traj.end - 2*xi.block(s*(waypoint),0,s,1) 
+                + xi.block(s*(waypoint-1),0,s,1);
+    }
+    else
+    {
+        accel = xi.block(s*(waypoint+1),0,s,1) - 2*xi.block(s*(waypoint),0,s,1)
+                + xi.block(s*(waypoint-1),0,s,1);
+    }
+
+    accel = accel*(traj.waypoints*traj.waypoints);
 }

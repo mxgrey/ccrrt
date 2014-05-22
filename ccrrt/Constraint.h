@@ -30,8 +30,11 @@ public:
     //                   certain class of constraints?
     virtual double getSpeed(const ccrrt::Trajectory& traj, size_t waypoint);
     virtual void getVelocity(Eigen::VectorXd& vel,
-                                    const ccrrt::Trajectory& traj,
-                                    size_t waypoint);
+                             const ccrrt::Trajectory& traj,
+                             size_t waypoint);
+    virtual void getAcceleration(Eigen::VectorXd& accel,
+                                 const ccrrt::Trajectory& traj,
+                                 size_t waypoint);
     
 };
 
