@@ -27,6 +27,10 @@ void get_cost(Constraint& constraint, Trajectory& traj)
 
 int main(int argc, char* argv[])
 {
+    std::cout << "Eigen version: world " << EIGEN_WORLD_VERSION
+              << ", major " << EIGEN_MAJOR_VERSION << ", minor " << EIGEN_MINOR_VERSION
+              << std::endl;
+
     CircleConstraint circle(Vector2d(0,0), 2, 0.1);
     Trajectory traj;
     traj.state_space = 2;
