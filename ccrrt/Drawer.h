@@ -15,6 +15,7 @@ public:
 //    ~Drawer();
     
     void draw_trajectory(const Trajectory& traj);
+    void draw_trajectory(const Trajectory& traj, const osg::Vec4& color);
     void draw_circle(const CircleConstraint& circle);
     void draw_vector(const Eigen::Vector2d& vec, const Eigen::Vector2d& origin);
     

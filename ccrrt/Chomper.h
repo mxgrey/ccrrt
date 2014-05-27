@@ -22,7 +22,9 @@ public:
     Chomper();
 
     void initialize(const Trajectory& trajectory, Constraint* constraint);
-    Constraint::validity_t iterate();
+    double alpha;
+//    Constraint::validity_t iterate();
+    Eigen::VectorXd iterate(bool quit_if_valid=false);
     
     const Trajectory& getTrajectory() const;
     const Constraint* const getConstraint() const; // Do we need so many consts?
@@ -33,18 +35,28 @@ protected:
     
     Trajectory _trajectory;
     Constraint* _constraint;
+    Constraint::validity_t _validity;
     
     Eigen::VectorXd Df;
     Eigen::VectorXd h;
+    Eigen::VectorXd e;
+    Eigen::VectorXd delta;
     
-    Eigen::SparseMatrix<double> A; // TODO: Make sparse matrix
+    Eigen::SparseMatrix<double> A;
     Eigen::MatrixXd Ainv;
-    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>, Eigen::Lower > llt;
+    Eigen::SparseMatrix<double> K;
+//    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>, Eigen::Lower > llt;
     Eigen::MatrixXd H;
+    Eigen::MatrixXd HAinvHt;
     Eigen::MatrixXd HAinvHt_inv;
     Eigen::MatrixXd Ainv_Ht_HAinvHt_inv;
 
     void _generate_A(int state_space, int waypoints);
+    void _build_e();
+
+    int _last_wp_size;
+    int _last_ss_size;
+    int _nm;
 };
 
 } // namespace ccrrt

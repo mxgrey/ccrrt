@@ -19,17 +19,22 @@ Drawer::Drawer()
 
 void Drawer::draw_trajectory(const Trajectory &traj)
 {
+    draw_trajectory(traj, osg::Vec4(0.1f,0.1f,0.1f,1.0f));
+}
+
+void Drawer::draw_trajectory(const Trajectory &traj, const osg::Vec4 &color)
+{
     osgAkin::Line* line = new osgAkin::Line(
                               akin::Translation(traj.start[0],0,traj.start[1]));
-    line->setColor(osg::Vec4(0.1f,0.1f,0.1f,1.0f));
-    
+    line->setColor(color);
+
     for(size_t i=0; i < traj.waypoints; ++i)
     {
         line->addVertex(akin::Translation(traj.xi[2*i],0,traj.xi[2*i+1]));
     }
-    
+
     line->addVertex(akin::Translation(traj.end[0],0,traj.end[1]));
-    
+
     line->updateVertices();
     _geode->addDrawable(line);
 }
