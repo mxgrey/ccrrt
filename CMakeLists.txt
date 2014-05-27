@@ -13,8 +13,6 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 file(GLOB lib_source "src/*.cpp" "src/*.h" "ccrrt/*.h")
 list(SORT lib_source)
 
-add_library(${PROJECT_NAME} SHARED ${lib_source})
-
 file(GLOB unit_tests_source "test/*.cpp")
 LIST(SORT unit_tests_source)
 
@@ -23,6 +21,8 @@ find_package(OpenSceneGraph)
 include_directories(${OpenSceneGraph_INCLUDE_DIRS})
 add_definitions(${OpenSourceGraph_DEFINITIONS})
 link_libraries(akin osg osgViewer osgDB osgAkin)
+
+add_library(${PROJECT_NAME} SHARED ${lib_source})
 
 enable_testing()
 

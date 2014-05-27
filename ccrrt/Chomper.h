@@ -44,7 +44,7 @@ protected:
     Eigen::MatrixXd HAinvHt_inv;
     Eigen::MatrixXd Ainv_Ht_HAinvHt_inv;
 
-    void _generate_A(size_t state_space, size_t waypoints);
+    void _generate_A(int state_space, int waypoints);
 };
 
 } // namespace ccrrt
