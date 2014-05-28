@@ -21,10 +21,10 @@ public:
     
     Chomper();
 
-    void initialize(const Trajectory& trajectory, Constraint* constraint);
+    virtual void initialize(const Trajectory& trajectory, Constraint* constraint);
     double alpha;
-//    Constraint::validity_t iterate();
-    Eigen::VectorXd iterate(bool quit_if_valid=false);
+    
+    virtual Constraint::validity_t iterate(bool quit_if_valid=false);
     
     const Trajectory& getTrajectory() const;
     const Constraint* const getConstraint() const; // Do we need so many consts?

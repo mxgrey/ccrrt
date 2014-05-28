@@ -134,10 +134,10 @@ void Chomper::_generate_A(int state_space, int waypoints)
 }
 
 //Constraint::validity_t Chomper::iterate()
-Eigen::VectorXd Chomper::iterate(bool quit_if_valid)
+Constraint::validity_t Chomper::iterate(bool quit_if_valid)
 {
     if(quit_if_valid && _validity != Constraint::INVALID)
-        /*return _validity*/;
+        return _validity;
 
     _constraint->getJacobian(H, _trajectory);
     HAinvHt = H*Ainv*H.transpose();
@@ -175,9 +175,9 @@ Eigen::VectorXd Chomper::iterate(bool quit_if_valid)
     _validity = _constraint->getCost(h, _trajectory);
 
 //    return -Df;
-//    return _validity;
+    return _validity;
 
-    return delta;
+//    return delta;
 }
 
 void Chomper::_build_e()
