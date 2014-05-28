@@ -1,5 +1,6 @@
 
 #include "../ccrrt/ConstraintGroup.h"
+#include <iostream>
 
 using namespace ccrrt;
 
@@ -32,10 +33,15 @@ Constraint::validity_t ConstraintGroup::getCost(Eigen::VectorXd& cost,
     validity_t result = VALID;
     validity_t tempresult = VALID;
     Eigen::VectorXd tempCost;
+    size_t next_start = 0;
     for(size_t i=0; i<_constraints.size(); ++i)
     {
+        std::cout << "i: " << i << std::endl;
         tempresult = _constraints[i]->getCost(tempCost, traj);
-        cost.block(i,0,_constraints[i]->constraintDimension(),traj.xi.size()) = tempCost;
+        std::cout << "tempCost: " << tempCost.transpose() << std::endl;
+        cost.block(next_start,0,_constraints[i]->constraintDimension(),traj.xi.size()) = tempCost;
+        next_start += _constraints[i]->constraintDimension();
+
         if((int)tempresult < (int)result)
             result = tempresult;
     }

@@ -1,7 +1,7 @@
 
-
 #include "../ccrrt/MultiChomper.h"
 #include "../ccrrt/CircleConstraint.h"
+#include "../ccrrt/ConstraintGroup.h"
 #include "../ccrrt/Drawer.h"
 #include <iostream>
 
@@ -10,7 +10,16 @@ using namespace Eigen;
 
 int main(int argc, char* argv[])
 {
-    CircleConstraint circle(Vector2d(0,0), 2, 0.1);
+    ConstraintGroup group;
+
+    std::vector<CircleConstraint*> circles;
+    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2,0), 1, 0.1));
+
+    for(size_t i=0; i<circles.size(); ++i)
+    {
+        group.addConstraint(circles[i]);
+    }
 
     Trajectory traj;
     traj.state_space = 2;
@@ -28,14 +37,22 @@ int main(int argc, char* argv[])
 
     MultiChomper multichomp;
     multichomp.alpha = 0.5;
-    multichomp.run(traj, &circle, 0.2);
+    multichomp.run(traj, &group, 0.2);
 
     Drawer draw;
-    draw.draw_circle(circle);
+
+    for(size_t i=0; i<circles.size(); ++i)
+    {
+        draw.draw_circle(*circles[i]);
+    }
+
     draw.draw_trajectory(multichomp.getTrajectory());
     draw.draw_trajectory(traj, osg::Vec4(0.7,0.7,0.7,1.0));
 
     draw.run();
+
+    return 0;
+
 
     return 0;
 }
