@@ -21,13 +21,13 @@ public:
     
     Chomper();
 
-    virtual void initialize(const Trajectory& trajectory, Constraint* constraint);
+    void initialize(const Trajectory& trajectory, Constraint* constraint);
     double alpha;
     
-    virtual Constraint::validity_t iterate(bool quit_if_valid=false);
+    Constraint::validity_t iterate(bool quit_if_valid=false);
     
     const Trajectory& getTrajectory() const;
-    const Constraint* const getConstraint() const; // Do we need so many consts?
+    Constraint* getConstraint() const; // Do we need so many consts?
 
     path_optimization_t opt_type;
     

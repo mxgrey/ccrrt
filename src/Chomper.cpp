@@ -19,7 +19,7 @@ const Trajectory& Chomper::getTrajectory() const
     return _trajectory;
 }
 
-const Constraint* const Chomper::getConstraint() const
+Constraint* Chomper::getConstraint() const
 {
     return _constraint;
 }
@@ -31,7 +31,7 @@ void Chomper::initialize(const Trajectory& trajectory, Constraint* constraint)
     
     size_t nm = trajectory.state_space*trajectory.waypoints;
     size_t c = _constraint->constraintDimension();
-    
+
     Df.resize(nm);
     h.resize(c);
     e.resize(trajectory.state_space*(trajectory.waypoints+1));
@@ -45,7 +45,7 @@ void Chomper::initialize(const Trajectory& trajectory, Constraint* constraint)
     HAinvHt.resize(c,c);
     Ainv_Ht_HAinvHt_inv.resize(nm,c);
 
-    _constraint->getCost(h, _trajectory);
+    _validity = _constraint->getCost(h, _trajectory);
 }
 
 void Chomper::_generate_A(int state_space, int waypoints)
@@ -133,15 +133,16 @@ void Chomper::_generate_A(int state_space, int waypoints)
 //    std::cout << "\nTimes each other:\n" << A*Ainv << std::endl;
 }
 
-//Constraint::validity_t Chomper::iterate()
 Constraint::validity_t Chomper::iterate(bool quit_if_valid)
 {
     if(quit_if_valid && _validity != Constraint::INVALID)
         return _validity;
 
     _constraint->getJacobian(H, _trajectory);
+//    std::cout << "\nH:\n" << H << std::endl;
     HAinvHt = H*Ainv*H.transpose();
-    if(fabs(HAinvHt.determinant()) > 10e-6)
+//    std::cout << "\nHAinvHt:\n" << HAinvHt << std::endl;
+    if(fabs(HAinvHt.determinant()) > 1e-6)
     {
         HAinvHt_inv = HAinvHt.inverse();
         Ainv_Ht_HAinvHt_inv = Ainv*H.transpose()*HAinvHt_inv;
@@ -152,6 +153,8 @@ Constraint::validity_t Chomper::iterate(bool quit_if_valid)
         Ainv_Ht_HAinvHt_inv.setZero();
     }
 
+//    std::cout << "\nHAinvHt_inv:\n" << HAinvHt_inv << std::endl;
+//    std::cout << "\nAinv_Ht_HAinvHt_inv:\n" << Ainv_Ht_HAinvHt_inv.transpose() << std::endl;
 
 //    std::cout << "A: " << A.rows() << "x" << A.cols() << std::endl;
 //    std::cout << "xi:" << _trajectory.xi.rows() << std::endl;
@@ -166,10 +169,11 @@ Constraint::validity_t Chomper::iterate(bool quit_if_valid)
     Df = A*_trajectory.xi+K.transpose()*e;
 //    std::cout << "\nDf:\n" << Df.transpose() << std::endl;
 
+
     delta = -alpha*(Ainv - Ainv_Ht_HAinvHt_inv*H*Ainv)*Df
             -Ainv_Ht_HAinvHt_inv*h;
 
-//    std::cout << delta.transpose() << std::endl;
+//    std::cout << "\ndelta:\n" << delta.transpose() << std::endl;
 
     _trajectory.xi += delta;
     _validity = _constraint->getCost(h, _trajectory);
