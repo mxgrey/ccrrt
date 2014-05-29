@@ -54,6 +54,4 @@ int main(int argc, char* argv[])
     draw.run();
 
     return 0;
-    
-    return 0;
 }

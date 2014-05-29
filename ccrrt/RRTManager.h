@@ -275,6 +275,7 @@ protected:
     
 
     RRTNode* lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t connectTargetType);
+    virtual RRTNode* attemptConnect(RRTNode* begin, const RRTNode* target);
     void constructSolution(const RRTNode* beginTree, const RRTNode* endTree);
     bool _hasSolution;
 

@@ -541,12 +541,35 @@ RRTNode* RRTManager::lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t
         }
     }
     
-    if(eval < _maxStepSize)
+    return attemptConnect(goalCandidate, targetNode);
+}
+
+RRTNode* RRTManager::attemptConnect(RRTNode *begin, const RRTNode *target)
+{
+    RRTNode* currentNode = begin;
+    JointConfig currentConfig = begin->getConfig();
+
+    while( (currentNode->getConfig()-target->getConfig()).norm() > _maxStepSize )
     {
-        return goalCandidate;
+        stepConfigTowards(currentConfig, target->getConfig());
+
+        if(!constraintProjector(currentConfig, currentNode->getConfig()))
+            return NULL;
+
+        currentNode->scaleJointConfig(currentConfig);
+
+        if(!collisionChecker(currentConfig, currentNode->getConfig()))
+            return NULL;
+
+        currentNode = currentNode->attemptAddChild(currentConfig);
+        if(currentNode == NULL)
+        {
+            std::cerr << "Attempt connect code is broken!" << std::endl;
+            return NULL;
+        }
     }
-    else
-        return NULL;
+
+    return currentNode;
 }
 
 void RRTManager::constructSolution(const RRTNode *beginTree, const RRTNode *endTree)
