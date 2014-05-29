@@ -11,7 +11,7 @@ class ConstrainedRRT : public RRTManager
 public:
     
     ConstrainedRRT(int maxTreeSize=10000, 
-                   double maxStepSize=0.1, 
+                   double maxStepSize=0.1,
                    double collisionCheckStepSize=0.1);
     
     bool collisionChecker(JointConfig& config, const JointConfig& parentConfig);

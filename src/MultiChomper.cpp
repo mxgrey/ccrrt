@@ -49,7 +49,7 @@ bool MultiChomper::_go()
             ++counter;
             if(counter > max)
             {
-                std::cout << "failed" << std::endl;
+//                std::cout << "failed" << std::endl;
                 quit = true;
                 break;
             }
@@ -118,7 +118,7 @@ bool MultiChomper::_go()
         ++counter;
     }
     _trajectory.waypoints = counter;
-    std::cout << "final count: " << counter << std::endl;
+//    std::cout << "final count: " << counter << std::endl;
 
     return success;
 }

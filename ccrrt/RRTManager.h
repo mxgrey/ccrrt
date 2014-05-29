@@ -148,11 +148,11 @@ public:
 
     // Identify the node that's closest and scale down newConfig to be
     // an acceptable child to that node
-    RRTNode& getClosestNode(JointConfig &newConfig);
+    RRTNode& getClosestNodeAndScaleConfig(JointConfig& newConfig);
     
     // Identify the node that's closest in this subtree and return the rating
     // of that node
-    double getClosestNodeRaw(RRTNode *&closest, const JointConfig& newConfig);
+    double getClosestNode(RRTNode *&closest, const JointConfig& newConfig);
 
 
     // Add the new config as this node's child. Returns false if
@@ -161,7 +161,7 @@ public:
     // added and childConfig has been modified so that it is an
     // acceptable child. childConfig should then be collision tested
     // again.
-    RRTNode* attemptAddChild(JointConfig& childConfig);
+    RRTNode* attemptAddChild(const JointConfig& childConfig);
     
     // This will scale the childConfig to be a suitable child but will not
     // attempt to add it as a child.
@@ -233,7 +233,6 @@ public:
     void setMaxStepSize(double newMaxStepSize);
     // Maximum size that a tree may grow to
     int maxTreeSize_;
-    // Optional parameter (-1 means disabled):
     // Number of total nodes allowed across all the trees. -1 means disabled
     int maxTotalNodes_;
     // Minimum step size of required collision checks between two nodes

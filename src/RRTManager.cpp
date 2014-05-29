@@ -103,7 +103,7 @@ RRT_Result_t RRTManager::growTrees()
         config = refConfig; // reset our config to the refConfig
         
         // Using the reference (&) is VERY important here
-        RRTNode& newParent = trees[i]->getClosestNode(config);
+        RRTNode& newParent = trees[i]->getClosestNodeAndScaleConfig(config);
         
         //{
         //   THIS IS WHERE YOU SHOULD PROJECT TO THE CONSTRAINT MANIFOLD
@@ -317,10 +317,10 @@ bool RRTNode::hasChild() const { return hasChildren_; }
 size_t RRTNode::numChildren() const { return children.size(); }
 
 
-RRTNode& RRTNode::getClosestNode(JointConfig &newConfig)
+RRTNode& RRTNode::getClosestNodeAndScaleConfig(JointConfig &newConfig)
 {
     RRTNode* closest = NULL;
-    double scale = getClosestNodeRaw(closest, newConfig);
+    double scale = getClosestNode(closest, newConfig);
     
     scale = fabs(scale) < fabs(maxStepSize_) ? fabs(scale) : fabs(maxStepSize_);
     newConfig = closest->config + scale*(newConfig-closest->config).normalized();
@@ -329,7 +329,7 @@ RRTNode& RRTNode::getClosestNode(JointConfig &newConfig)
 }
 
 
-double RRTNode::getClosestNodeRaw(RRTNode* &closest, const JointConfig &newConfig)
+double RRTNode::getClosestNode(RRTNode* &closest, const JointConfig &newConfig)
 {
     double eval = (newConfig-config).norm();
     closest = this;
@@ -337,7 +337,7 @@ double RRTNode::getClosestNodeRaw(RRTNode* &closest, const JointConfig &newConfi
     for(size_t i=0; i<children.size(); i++)
     {
         RRTNode* closerCheck;
-        double evalCheck = children[i]->getClosestNodeRaw(closerCheck, newConfig);
+        double evalCheck = children[i]->getClosestNode(closerCheck, newConfig);
 
         if(evalCheck < eval)
         {
@@ -350,11 +350,11 @@ double RRTNode::getClosestNodeRaw(RRTNode* &closest, const JointConfig &newConfi
 }
 
 
-RRTNode *RRTNode::attemptAddChild(JointConfig &childConfig)
+RRTNode *RRTNode::attemptAddChild(const JointConfig &childConfig)
 {
     if((childConfig-config).norm() > maxStepSize_+numPrecThresh)
     {
-        childConfig = config + maxStepSize_*(childConfig-config).normalized();
+//        childConfig = config + maxStepSize_*(childConfig-config).normalized();
         return NULL;
     }
     else
@@ -531,7 +531,7 @@ RRTNode* RRTManager::lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t
         if(treeTypeTracker[i] == connectTargetType)
         {
             RRTNode* goalCheck;
-            double evalCheck = trees[i]->getClosestNodeRaw(goalCheck, targetNode->getConfig());
+            double evalCheck = trees[i]->getClosestNode(goalCheck, targetNode->getConfig());
             
             if(evalCheck < eval)
             {
