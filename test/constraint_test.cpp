@@ -23,8 +23,6 @@ void get_cost(Constraint& constraint, Trajectory& traj)
     std::cout << cost.transpose() << std::endl;
 }
 
-//void get_cost(Constraint& constraint, )
-
 int main(int argc, char* argv[])
 {
     std::cout << "Eigen version: world " << EIGEN_WORLD_VERSION

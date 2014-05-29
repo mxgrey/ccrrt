@@ -17,9 +17,10 @@ public:
         
     } validity_t;
     
-    virtual bool getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj) = 0;
+    virtual size_t getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj) = 0;
     
-    virtual validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj) = 0;
+    virtual validity_t getCost(Eigen::VectorXd& cost, 
+                               const ccrrt::Trajectory& traj) = 0;
 
     virtual validity_t getValidity(const ccrrt::Trajectory& traj) = 0;
     

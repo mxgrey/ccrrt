@@ -12,9 +12,10 @@ public:
     CircleConstraint(const Eigen::Vector2d& mCenter = Eigen::Vector2d::Zero(),
                      double mRadius = 0, double mBuffer = 0);
     
-    bool getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj);
+    size_t getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj);
     
-    validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj);
+    validity_t getCost(Eigen::VectorXd& cost, 
+                       const ccrrt::Trajectory& traj);
 
     validity_t getValidity(const Trajectory &traj);
     
@@ -28,7 +29,9 @@ protected:
 
     double _basicCost(const Eigen::Vector2d& config);
     void _basicCostGrad(Eigen::Vector2d& grad_c, const Eigen::Vector2d& config);
-    void _basicJacobian(Eigen::Matrix<double,1,2>& J, const ccrrt::Trajectory& traj, size_t waypoint);
+    size_t _basicJacobian(Eigen::Matrix<double,1,2>& J,
+                          const ccrrt::Trajectory& traj,
+                          size_t waypoint);
     validity_t _basicValidity(const Eigen::Vector2d& config);
 
 };

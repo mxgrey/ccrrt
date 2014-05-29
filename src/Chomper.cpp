@@ -29,21 +29,21 @@ void Chomper::initialize(const Trajectory& trajectory, Constraint* constraint)
     _trajectory = trajectory;
     _constraint = constraint;
     
-    size_t nm = trajectory.state_space*trajectory.waypoints;
+    _nm = trajectory.state_space*trajectory.waypoints;
     size_t c = _constraint->constraintDimension();
 
-    Df.resize(nm);
+    Df.resize(_nm);
     h.resize(c);
     e.resize(trajectory.state_space*(trajectory.waypoints+1));
-    delta.resize(nm);
+    delta.resize(_nm);
 
     _generate_A(trajectory.state_space, trajectory.waypoints);
     _build_e();
 
-    H.resize(c,nm);
+    H.resize(c,_nm);
     HAinvHt_inv.resize(c,c);
     HAinvHt.resize(c,c);
-    Ainv_Ht_HAinvHt_inv.resize(nm,c);
+    Ainv_Ht_HAinvHt_inv.resize(_nm,c);
 
     _validity = _constraint->getCost(h, _trajectory);
 }
@@ -56,7 +56,6 @@ void Chomper::_generate_A(int state_space, int waypoints)
     _last_wp_size = waypoints;
     _last_ss_size = state_space;
 
-    int _nm = state_space*waypoints;
     A.resize(_nm,_nm);
     K.resize(state_space*(waypoints+1),_nm);
 
@@ -138,19 +137,21 @@ Constraint::validity_t Chomper::iterate(bool quit_if_valid)
     if(quit_if_valid && _validity != Constraint::INVALID)
         return _validity;
 
-    _constraint->getJacobian(H, _trajectory);
+    size_t c = _constraint->getJacobian(H, _trajectory);
 //    std::cout << "\nH:\n" << H << std::endl;
-    HAinvHt = H*Ainv*H.transpose();
+    HAinvHt.block(0,0,c,c) = H.block(0,0,c,_nm)*Ainv*H.block(0,0,c,_nm).transpose();
 //    std::cout << "\nHAinvHt:\n" << HAinvHt << std::endl;
-    if(fabs(HAinvHt.determinant()) > 1e-6)
+    if(c>0 && fabs(HAinvHt.block(0,0,c,c).determinant()) > 1e-6)
     {
-        HAinvHt_inv = HAinvHt.inverse();
-        Ainv_Ht_HAinvHt_inv = Ainv*H.transpose()*HAinvHt_inv;
+        HAinvHt_inv.block(0,0,c,c) = HAinvHt.block(0,0,c,c).inverse();
+        Ainv_Ht_HAinvHt_inv.block(0,0,_nm,c) = Ainv*H.block(0,0,c,_nm).transpose()
+                                               *HAinvHt_inv.block(0,0,c,c);
     }
     else
     {
         HAinvHt_inv.setZero();
         Ainv_Ht_HAinvHt_inv.setZero();
+        std::cout << "singular" << std::endl;
     }
 
 //    std::cout << "\nHAinvHt_inv:\n" << HAinvHt_inv << std::endl;
@@ -169,9 +170,20 @@ Constraint::validity_t Chomper::iterate(bool quit_if_valid)
     Df = A*_trajectory.xi+K.transpose()*e;
 //    std::cout << "\nDf:\n" << Df.transpose() << std::endl;
 
-
-    delta = -alpha*(Ainv - Ainv_Ht_HAinvHt_inv*H*Ainv)*Df
-            -Ainv_Ht_HAinvHt_inv*h;
+    if(c>0)
+    {
+//        std::cout << "delta full: " << c << std::endl;
+//        std::cout << Ainv_Ht_HAinvHt_inv.block(0,0,_nm,c).rows() 
+//                  << "x" << Ainv_Ht_HAinvHt_inv.block(0,0,_nm,c).cols() << " | ";
+//        std::cout << H.block(0,0,c,_nm).rows() << "x" << H.block(0,0,c,_nm).cols() << std::endl;
+        delta = -alpha*(Ainv - Ainv_Ht_HAinvHt_inv.block(0,0,_nm,c)*H.block(0,0,c,_nm)*Ainv)*Df
+                -Ainv_Ht_HAinvHt_inv.block(0,0,_nm,c)*h.block(0,0,c,1);
+    }
+    else
+    {
+//        std::cout << "delta raw" << std::endl;
+        delta = -alpha*Ainv*Df;
+    }
 
 //    std::cout << "\ndelta:\n" << delta.transpose() << std::endl;
 

@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
 
     std::vector<CircleConstraint*> circles;
     circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(2,0), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(3.1,0), 1, 0.1));
 
     for(size_t i=0; i<circles.size(); ++i)
     {
@@ -27,9 +27,9 @@ int main(int argc, char* argv[])
     traj.start.resize(2);
     traj.start << -3, 0;
     traj.end.resize(2);
-    traj.end << -1, 4;
+    traj.end << 3.4, 1.2;
     traj.xi.resize(2);
-    traj.xi << 1.50, -2.00;
+    traj.xi << 2.2, -0.20;
 //    traj.xi << -1.50, 3.00;
 
     traj.waypoints = traj.xi.size()/2;

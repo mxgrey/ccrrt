@@ -27,6 +27,7 @@ bool MultiChomper::run(const Trajectory &trajectory,
 bool MultiChomper::_go()
 {
     bool success = false;
+    bool quit = false;
     Waypoint waypoint = _waypoints.begin();
     Trajectory next_traj;
     next_traj.start = _start;
@@ -35,10 +36,13 @@ bool MultiChomper::_go()
     next_traj.state_space = _start.size();
     next_traj.waypoints = 1;
 
+    size_t debug_count = 0;
     Eigen::VectorXd wp1, wp2;
     while(!success)
     {
-        size_t counter=0, max=20;
+        ++debug_count;
+//        std::cout << "Loop " << debug_count << std::endl;
+        size_t counter=0, max=10;
         Chomper::initialize(next_traj, _constraint);
         while(Chomper::iterate(true) == Constraint::INVALID)
         {
@@ -46,10 +50,14 @@ bool MultiChomper::_go()
             if(counter > max)
             {
                 std::cout << "failed" << std::endl;
-                return false;
+                quit = true;
+                break;
             }
         }
+        
         *waypoint = _trajectory.xi;
+        if(quit)
+            break;
 
         success = true;
         Waypoint last_check = _waypoints.begin();

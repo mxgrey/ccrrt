@@ -9,21 +9,21 @@ ConstraintGroup::ConstraintGroup()
     _dimension = 0;
 }
 
-bool ConstraintGroup::getJacobian(Eigen::MatrixXd& J, const Trajectory& traj)
+size_t ConstraintGroup::getJacobian(Eigen::MatrixXd& J, const Trajectory& traj)
 {
-    bool result = true;
+    bool rank = 0;
     
     J.resize(_dimension, traj.xi.size());
     Eigen::MatrixXd Htemp;
-    size_t c_counter = 0;
+    size_t rank_check = 0;
     for(size_t i=0; i<_constraints.size(); ++i)
     {
-        result &= _constraints[i]->getJacobian(Htemp, traj);
-        J.block(c_counter,0,_constraints[i]->constraintDimension(),traj.xi.size());
-        c_counter += _constraints[i]->constraintDimension();
+        rank_check = _constraints[i]->getJacobian(Htemp, traj);
+        J.block(rank,0,rank_check,traj.xi.size()) = Htemp.block(0,0,rank_check,traj.xi.size());
+        rank += rank_check;
     }
     
-    return result;
+    return rank;
 }
 
 Constraint::validity_t ConstraintGroup::getCost(Eigen::VectorXd& cost,
@@ -36,14 +36,15 @@ Constraint::validity_t ConstraintGroup::getCost(Eigen::VectorXd& cost,
     size_t next_start = 0;
     for(size_t i=0; i<_constraints.size(); ++i)
     {
-        std::cout << "i: " << i << std::endl;
         tempresult = _constraints[i]->getCost(tempCost, traj);
-        std::cout << "tempCost: " << tempCost.transpose() << std::endl;
-        cost.block(next_start,0,_constraints[i]->constraintDimension(),traj.xi.size()) = tempCost;
-        next_start += _constraints[i]->constraintDimension();
-
         if((int)tempresult < (int)result)
             result = tempresult;
+        
+        if(tempresult == Constraint::VALID)
+            continue;
+        
+        cost.block(next_start,0,_constraints[i]->constraintDimension(),1) = tempCost;
+        next_start += _constraints[i]->constraintDimension();
     }
     
     return result;
