@@ -17,11 +17,6 @@ Drawer::Drawer()
     viewer.setSceneData(_root);
 }
 
-void Drawer::draw_trajectory(const Trajectory &traj)
-{
-    draw_trajectory(traj, osg::Vec4(0.1f,0.1f,0.1f,1.0f));
-}
-
 void Drawer::draw_trajectory(const Trajectory &traj, const osg::Vec4 &color)
 {
     osgAkin::Line* line = new osgAkin::Line(
@@ -39,7 +34,75 @@ void Drawer::draw_trajectory(const Trajectory &traj, const osg::Vec4 &color)
     _geode->addDrawable(line);
 }
 
-void Drawer::draw_circle(const CircleConstraint &circle)
+void Drawer::draw_path(const ConfigPath &path, const osg::Vec4 &color)
+{
+    osgAkin::Line* line = new osgAkin::Line;
+    
+    line->setColor(color);
+    
+    for(size_t i=0; i < path.size(); ++i)
+    {
+        line->addVertex(akin::Translation(path[i][0],0,path[i][1]));
+    }
+    
+    line->updateVertices();
+    _geode->addDrawable(line);
+}
+
+void Drawer::draw_tree(const RRTNode &root_node, const osg::Vec4 &color)
+{
+    std::map<const RRTNode*,ushort> node_map;
+    osgAkin::LineTree* tree = new osgAkin::LineTree;
+    tree->setColor(color);
+    std::vector<size_t> tracker;
+    tracker.push_back(0);
+    size_t depth = 0;
+    const RRTNode* current_node = &root_node;
+    
+    node_map[&root_node] = tree->addVertex(akin::Translation(
+                                               root_node.getConfig()[0],0,
+                                           root_node.getConfig()[1]),-1);
+    
+    while(tracker.size() > 0)
+    {
+        if(tracker[depth] < current_node->numChildren())
+        {
+            current_node = current_node->getChild(tracker[depth]);
+            node_map[current_node] = tree->addVertex(akin::Translation(
+                                        current_node->getConfig()[0],0,
+                                        current_node->getConfig()[1]),
+                                     node_map[current_node->getParent()]);
+            
+//            std::cout << "D:" << depth << " T:" << tracker[depth] 
+//                      << " C:" << current_node->numChildren() << " | " 
+//                      << current_node->getConfig().transpose() << std::endl;
+            
+            ++tracker[depth];
+            tracker.push_back(0);
+            ++depth;
+        }
+        else
+        {
+            current_node = current_node->getParent();
+            tracker.pop_back();
+            --depth;
+        }
+    }
+    
+    tree->updateVertices();
+    _geode->addDrawable(tree);
+}
+
+void Drawer::draw_rrts(const RRTManager& mgr,
+                       const osg::Vec4& tree_color,
+                       const osg::Vec4& path_color)
+{
+    draw_path(mgr.solvedPlan, path_color);
+    for(size_t i=0; i<mgr.getNumTrees(); ++i)
+        draw_tree(*mgr.getTree(i),tree_color);
+}
+
+void Drawer::draw_circle(const CircleConstraint& circle)
 {
     osgAkin::Line* line = new osgAkin::Line;
     

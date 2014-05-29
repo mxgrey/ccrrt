@@ -129,7 +129,7 @@ class RRTNode
 public:
 
     JointConfig config;
-    JointConfig getConfig() const;
+    const JointConfig& getConfig() const;
     
     RRTNode(JointConfig mConfig, double maxStepSize=0.3, RRTNode* mParent = NULL);
 
@@ -141,10 +141,10 @@ public:
     bool hasParent() const;
 
     // If the node does not have a child, this will return itself
-    const RRTNode* getChild(int child) const;
+    const RRTNode* getChild(size_t child) const;
     // Always check for hasChild() before calling getChild(~)
-    bool hasChild();
-    int numChildren();
+    bool hasChild() const;
+    size_t numChildren() const;
 
     // Identify the node that's closest and scale down newConfig to be
     // an acceptable child to that node
@@ -190,7 +190,9 @@ protected:
 class RRTManager
 {
 public:
-    RRTManager(int maxTreeSize=10000, double maxStepSize=0.3, double collisionCheckStepSize=0.3);
+    RRTManager(int maxTreeSize=10000,
+               double maxStepSize=0.3,
+               double collisionCheckStepSize=0.3);
 
     void setDomain(const JointConfig& minJointConfig,
                    const JointConfig& maxJointConfig,
@@ -241,19 +243,22 @@ public:
     // Resolution that should be used for partitioning the domain
     int dResolution;
     
-    int getTreeSize(int tree);
-    RRT_Tree_t getTreeType(int tree);
-    int getTotalNodes();
-    int getNumIterations();
+    
+    int getTreeSize(size_t tree) const;
+    RRT_Tree_t getTreeType(size_t tree) const;
+    int getTotalNodes() const;
+    int getNumIterations() const;
+    size_t getNumTrees() const;
+    const RRTNode* getTree(size_t tree) const;
     
     // Check if a particular tree is maxed out
-    bool checkIfMaxed(int tree);
+    bool checkIfMaxed(int tree) const;
     // Check if all the trees are maxed out
-    bool checkIfAllMaxed();
+    bool checkIfAllMaxed() const;
     // Check if any of the trees are maxed out
-    bool checkIfAnyMaxed();
+    bool checkIfAnyMaxed() const;
     // Check if the manager has identified a solution yet
-    bool checkIfSolved();
+    bool checkIfSolved() const;
     
     void randomizeConfig(JointConfig& config);
     void scaleConfig(JointConfig& config, const JointConfig& parentConfig);
@@ -271,18 +276,18 @@ protected:
 
     RRTNode* lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t connectTargetType);
     void constructSolution(const RRTNode* beginTree, const RRTNode* endTree);
-    bool hasSolution_;
+    bool _hasSolution;
 
     JointConfig minConfig;
     JointConfig maxConfig;
-    int domainSize;
-    bool hasDomain_;
-    int iterations_;
+    int _domainSize;
+    bool _hasDomain;
+    int _iterations;
 
-    double numPrecThresh;
+    double _numPrecThresh;
 
     // Maximum step size through the jointspace
-    double maxStepSize_;
+    double _maxStepSize;
 
     std::vector<int> currentTreeSize;
     
