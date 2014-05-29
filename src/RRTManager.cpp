@@ -64,28 +64,39 @@ bool RRTManager::constraintProjector(JointConfig &config, const JointConfig &par
     return true;
 }
 
+RRT_Result_t RRTManager::checkStatus()
+{
+    if(_invalidRoot)
+        return RRT_INVALID_ROOT;
+
+    if(!_hasDomain) // Make sure we have a domain
+        return RRT_NO_DOMAIN;
+
+    if(_hasSolution) // (Optional)
+        return RRT_SOLVED; // Don't waste our time!
+
+    if(maxIterations_ >= 0 && _iterations >= maxIterations_)
+        return RRT_REACHED_ITER_LIMIT;
+
+    if(maxTotalNodes_ >= 0 && getTotalNodes() >= maxTotalNodes_)
+        return RRT_REACHED_MAX_NODES;
+
+    if(checkIfAllMaxed())
+        return RRT_TREES_MAXED;
+
+    return RRT_NOT_FINISHED;
+}
+
 RRT_Result_t RRTManager::growTrees()
 {
     // THIS IS THE DEFUALT VERSION OF growTrees(). YOU SHOULD INHERIT RRTManager
     // AND EITHER WRITE OVER THIS VIRTUAL FUNCTION WITH YOUR OWN OR SIMPLY
     // OVERWRITE THE VIRTUAL FUNCTIONS collisionChecker(~) AND constraintProjector(~)
     // (instructions will be in capital letters, explanations are in lowercase)
-    
-    
-    if(!_hasDomain) // Make sure we have a domain
-        return RRT_NO_DOMAIN;
-    
-    if(_hasSolution) // (Optional)
-        return RRT_SOLVED; // Don't waste our time!
-    
-    if(maxIterations_ >= 0 && _iterations >= maxIterations_)
-        return RRT_REACHED_ITER_LIMIT;
-    
-    if(maxTotalNodes_ >= 0 && getTotalNodes() >= maxTotalNodes_)
-        return RRT_REACHED_MAX_NODES;
-    
-    if(checkIfAllMaxed())
-        return RRT_TREES_MAXED;
+
+    RRT_Result_t check = checkStatus();
+    if(check != RRT_NOT_FINISHED)
+        return check;
     
     // Grab a random reference configuration for the trees to move towards
     JointConfig refConfig(_domainSize);
@@ -414,6 +425,7 @@ RRTManager::RRTManager(int maxTreeSize, double maxStepSize, double collisionChec
     currentTreeSize.resize(0);
     _hasSolution = false;
     _hasDomain = false;
+    _invalidRoot = false;
     srand(time(NULL));
     maxTotalNodes_ = -1;
     maxIterations_ = -1;
@@ -442,13 +454,22 @@ int RRTManager::addGoalTree(JointConfig goalConfiguration)
 int RRTManager::addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType)
 {
     if(!checkIfInDomain(rootNodeConfiguration))
+    {
+        _invalidRoot = true;
         return -1;
+    }
 
     if(!collisionChecker(rootNodeConfiguration, rootNodeConfiguration))
+    {
+        _invalidRoot = true;
         return -2;
+    }
 
     if(!constraintProjector(rootNodeConfiguration, rootNodeConfiguration))
+    {
+        _invalidRoot = true;
         return -3;
+    }
 
     RRTNode* rootNode = new RRTNode(rootNodeConfiguration, _maxStepSize);
     trees.push_back(rootNode);

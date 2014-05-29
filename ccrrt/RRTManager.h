@@ -57,6 +57,7 @@ typedef enum {
     RRT_REACHED_MAX_NODES,  ///> The maximum total number of nodes has been reached, and no plan has been found
     RRT_NO_DOMAIN,          ///> The user has neglected to define a domain for the search
     RRT_REACHED_ITER_LIMIT, ///> The growTree() has reached its iteration limit
+    RRT_INVALID_ROOT,       ///> The root of one of your trees is in an invalid configuration
 
     RRT_RESULT_SIZE
 
@@ -70,6 +71,7 @@ static const char *RRT_Result_string[RRT_RESULT_SIZE] =
     "RRT_REACHED_MAX_NODES",
     "RRT_NO_DOMAIN",
     "RRT_REACHED_ITER_LIMIT",
+    "RRT_INVALID_ROOT"
 };
 
 inline std::string RRT_Result_to_string(RRT_Result_t result)
@@ -213,6 +215,7 @@ public:
     // Or it returns -3 if the constraintProjector was unsatisfied
     int addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType);
 
+    virtual RRT_Result_t checkStatus();
     // Add a node to each tree while checking for connections between trees
     virtual RRT_Result_t growTrees();
     
@@ -277,6 +280,7 @@ protected:
     virtual RRTNode* attemptConnect(RRTNode* begin, const RRTNode* target);
     void constructSolution(const RRTNode* beginTree, const RRTNode* endTree);
     bool _hasSolution;
+    bool _invalidRoot;
 
     JointConfig minConfig;
     JointConfig maxConfig;

@@ -15,21 +15,9 @@ RRT_Result_t ChompRRT::growTrees(Trajectory& referenceTraj)
     assert( trees.size() == 2
             && "ChompRRT is only designed to handle 1 start tree and 1 goal tree!");
 
-    if(!_hasDomain)
-        return RRT_NO_DOMAIN;
-
-    if(_hasSolution)
-        return RRT_SOLVED;
-
-    if(maxIterations_ >=0 && _iterations >= maxIterations_)
-        return RRT_REACHED_ITER_LIMIT;
-    ++_iterations;
-
-    if(maxTotalNodes_ >= 0 && getTotalNodes() >= maxTotalNodes_)
-        return RRT_REACHED_MAX_NODES;
-
-    if(checkIfAllMaxed())
-        return RRT_TREES_MAXED;
+    RRT_Result_t check = checkStatus();
+    if(check != RRT_NOT_FINISHED)
+        return check;
 
     JointConfig refConfig(_domainSize);
 
