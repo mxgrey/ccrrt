@@ -198,7 +198,7 @@ public:
 
     void setDomain(const JointConfig& minJointConfig,
                    const JointConfig& maxJointConfig,
-                   int resolution=10000);
+                   unsigned long resolution=10000000);
     
     void getDomain(JointConfig& minJointConfig,
                    JointConfig& maxJointConfig) const;
@@ -247,7 +247,7 @@ public:
     // Number of times that growTree() can be called before giving up. -1 means disabled
     int maxIterations_;
     // Resolution that should be used for partitioning the domain
-    int dResolution;
+    unsigned long int dResolution;
     
     
     int getTreeSize(size_t tree) const;

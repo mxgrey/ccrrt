@@ -12,6 +12,8 @@ namespace ccrrt {
 class MultiChomper : public Chomper
 {
 public:
+    
+    MultiChomper();
 
     bool run(const Trajectory& trajectory,
                     Constraint* constraint,
@@ -19,6 +21,7 @@ public:
                     const Eigen::VectorXd& max,
                     double max_step_size);
 
+    size_t max_attempts;
     
 protected:
 

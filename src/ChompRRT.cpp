@@ -42,36 +42,80 @@ RRT_Result_t ChompRRT::growTrees(Trajectory& referenceTraj)
     _con.start = startNode->getConfig();
     _con.end = endNode->getConfig();
     _con.xi = refConfig;
-//    std::cout << "xi: " << _con.xi.transpose() << std::endl;
-
     referenceTraj = _con;
-
-    bool success = multichomp.run(_con, _constraint, minConfig, maxConfig, _maxStepSize);
-    _con = multichomp.getTrajectory();
-//    if(success)
-//        std::cout << "Connect Succeeded" << std::endl;
-//    else
-//        std::cout << "Connect Failed" << std::endl;
-//    std::cout << "T: " << _con.xi.transpose() << std::endl;
+    
+    multichomp.initialize(_con, _constraint, minConfig, maxConfig);
+    size_t quit = 0;
+    while(multichomp.iterate(true) == Constraint::INVALID)
+    {
+        ++quit;
+        if(quit > multichomp.max_attempts)
+        {
+            break;
+        }
+    }
+    
+    _con.xi = multichomp.getTrajectory().xi;
+    refConfig = _con.xi;
+    
+    trees[0]->getClosestNode(startNode, _con.xi);
+    trees[1]->getClosestNode(endNode, _con.xi);
+    _con.start = startNode->getConfig();
+    _con.end = endNode->getConfig();
+    
+    bool success = false;
+    
+    if(quit <= multichomp.max_attempts)
+    {
+        success = multichomp.run(_con, _constraint, minConfig, maxConfig, _maxStepSize);
+        _con = multichomp.getTrajectory();
+    }
 
     if(success)
     {
+        
         RRTNode* node = startNode;
-        for(size_t i=0; i<_con.waypoints; ++i)
+//        for(size_t i=0; i<_con.waypoints; ++i)
+//        {
+//            node = node->attemptAddChild(_con.xi.block(i*_domainSize,0,_domainSize,1));
+//            assert(node != NULL && "Uh oh... big bug in the CHOMP connection attempt!");
+//        }
+        
+        JointConfig config = node->getConfig();
+        size_t counter=0;
+        while(counter < _con.waypoints)
+//        while( (refConfig-config).norm() > fabs(_maxStepSize)/2 )
         {
-            node = node->attemptAddChild(_con.xi.block(i*_domainSize,0,_domainSize,1));
+            const JointConfig& target = _con.xi.block(counter*_domainSize,0,_domainSize,1);
+            stepConfigTowards(config, target);
+            if( config == target )
+            {
+                ++counter;
+            }
+            
+            if(!collisionChecker(config, node->getConfig()))
+            {
+                std::cout << "STEP SIZE ASSUMPTION FAILURE" << std::endl;
+                return RRT_NOT_FINISHED;
+            }
+            
+            node = node->attemptAddChild(config);
             assert(node != NULL && "Uh oh... big bug in the CHOMP connection attempt!");
         }
-        constructSolution(node, endNode);
-
-        return RRT_SOLVED;
+        
+        if(success)
+        {
+            constructSolution(node, endNode);
+            return RRT_SOLVED;
+        }
     }
     else
     {
         RRTNode* node = startNode;
         JointConfig config = startNode->getConfig();
         size_t counter=0;
-        while(counter < _con.waypoints)
+//        while(counter < _con.waypoints)
+        while( (refConfig-config).norm() > fabs(_maxStepSize)/2 )
         {
             const JointConfig& target = _con.xi.block(counter*_domainSize,0,_domainSize,1);
             stepConfigTowards(config, target);
@@ -91,7 +135,8 @@ RRT_Result_t ChompRRT::growTrees(Trajectory& referenceTraj)
         counter=_con.waypoints-1;
         node = endNode;
         config = endNode->getConfig();
-        while(counter > 0)
+//        while(counter > 0)
+        while( (refConfig-config).norm() > fabs(_maxStepSize)/2 )
         {
             const JointConfig& target = _con.xi.block(counter*_domainSize,0,_domainSize,1);
             stepConfigTowards(config, target);

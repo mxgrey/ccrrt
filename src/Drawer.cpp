@@ -77,7 +77,7 @@ void Drawer::draw_tree(const RRTNode &root_node, const osg::Vec4 &color)
 //                      << " C:" << current_node->numChildren() << " | " 
 //                      << current_node->getConfig().transpose() << std::endl;
             
-//            draw_marker(current_node->getConfig(), 0.025, color);
+            draw_marker(current_node->getConfig(), 0.025, color);
             
             ++tracker[depth];
             tracker.push_back(0);
@@ -99,10 +99,18 @@ void Drawer::draw_rrts(const RRTManager& mgr,
                        const osg::Vec4& tree_color,
                        const osg::Vec4& path_color)
 {
-    draw_path(mgr.solvedPlan, path_color);
+    if(mgr.checkIfSolved())
+        draw_path(mgr.solvedPlan, path_color);
+    
     for(size_t i=0; i<mgr.getNumTrees(); ++i)
     {
-        draw_tree(*mgr.getTree(i),tree_color);
+        osg::Vec4 treeColor = tree_color;
+        if(mgr.getTreeType(i) == RRT_START_TREE)
+            treeColor = osg::Vec4(0.8,0.8,0.1,1.0);
+        else if(mgr.getTreeType(i) == RRT_GOAL_TREE)
+            treeColor = osg::Vec4(0.1,1.0,0.1,1.0);
+        
+        draw_tree(*mgr.getTree(i),treeColor);
     }
     
     osgAkin::Line* domain = new osgAkin::Line;
@@ -145,23 +153,7 @@ void Drawer::draw_marker(const Eigen::Vector2d &position, double radius, const o
 }
 
 void Drawer::draw_circle(const CircleConstraint& circle, const osg::Vec4& color)
-{
-//    osgAkin::Line* line = new osgAkin::Line;
-    
-//    size_t res = 1000;
-//    for(size_t i=0; i<=res; ++i)
-//    {
-//        double x = circle.center.x() + circle.radius*cos(2*M_PI*i/res);
-//        double y = 0;
-//        double z = circle.center.y() + circle.radius*sin(2*M_PI*i/res);
-//        line->addVertex(akin::Translation(x,y,z));
-//    }
-    
-//    line->setColor(color);
-    
-//    line->updateVertices();
-//    _geode->addDrawable(line);
-    
+{   
     osg::Geometry* geom = new osg::Geometry;
     osg::Vec3Array* verts = new osg::Vec3Array;
     verts->push_back(osg::Vec3(circle.center.x(),0,circle.center.y()));

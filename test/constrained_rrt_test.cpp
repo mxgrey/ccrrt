@@ -12,18 +12,44 @@ int main(int argc, char* argv[])
     ConstraintGroup group;
 
     std::vector<CircleConstraint*> circles;
+    
+    // Infinitesimal Passage
+    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1,2), 2, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1,4.00), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.8,-0.3), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(4.2,-0.3), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
+    
+    // Super-Tiny Passage
+//    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1,2), 2, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1,3.99), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(2.8,-0.3), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(4.2,-0.3), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
+    
+    
+    // Middle Narrow Passage
+//    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1,2), 2, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1,4.2), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(3.0,-0.25), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(4.2,-0.3), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
+    
+    
+    // Simple
 //    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
 //    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
 //    circles.push_back(new CircleConstraint(Vector2d(3.1,-1), 1, 0.1));
 //    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
-    
-    
-    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(1,2), 2, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(3.3,-0.3), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(2.7,-2.3), 1, 0.1));
 
 
     for(size_t i=0; i<circles.size(); ++i)
@@ -43,6 +69,7 @@ int main(int argc, char* argv[])
     p << 3.4, 1.2;
     rrt.addGoalTree(p);
     
+    std::cout << "Start" << std::endl;
     RRT_Result_t result = RRT_NOT_FINISHED;
     size_t counter=0;
     while(RRT_NOT_FINISHED == result)
@@ -50,6 +77,9 @@ int main(int argc, char* argv[])
         ++counter;
         result = rrt.growTrees();
     }
+    
+    if(result != RRT_SOLVED)
+        std::cout << "Failure: " << result << std::endl;
     
     std::cout << "Steps: " << counter << std::endl;
     

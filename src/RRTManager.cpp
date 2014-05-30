@@ -115,6 +115,8 @@ RRT_Result_t RRTManager::growTrees()
         
         // Using the reference (&) is VERY important here
         RRTNode& newParent = trees[i]->getClosestNodeAndScaleConfig(config);
+        if( (newParent.getConfig()-config).norm() < _numPrecThresh )
+            continue;
         
         //{
         //   THIS IS WHERE YOU SHOULD PROJECT TO THE CONSTRAINT MANIFOLD
@@ -138,6 +140,18 @@ RRT_Result_t RRTManager::growTrees()
         //   AND THEN THIS IS WHERE YOU SHOULD PERFORM COLLISION CHECKING.
         //   IF COLLISION CHECKING FAILS, YOU SHOULD >> continue;
         //}
+        for(int j=0; j<config.size(); ++j)
+        {
+            if(config[j] != config[j])
+            {
+                std::cout << " --- NaN DETECTED --- " << std::endl;
+                std::cout << "config: " << config.transpose() << std::endl;
+                std::cout << "ref: " << refConfig.transpose() << std::endl;
+                std::cout << "parent: " << newParent.getConfig().transpose() << std::endl;
+                continue;
+            }
+        }
+
         if(!collisionChecker(config, newParent.getConfig()))
             continue;
 
@@ -245,6 +259,7 @@ void RRTManager::shortenSolution()
                 //
                 //
                 //}
+                
                 valid = valid && collisionChecker(testConfig, lastTestConfig);
                 
                 if(!valid)
@@ -334,7 +349,8 @@ RRTNode& RRTNode::getClosestNodeAndScaleConfig(JointConfig &newConfig)
     double scale = getClosestNode(closest, newConfig);
     
     scale = fabs(scale) < fabs(maxStepSize_) ? fabs(scale) : fabs(maxStepSize_);
-    newConfig = closest->config + scale*(newConfig-closest->config).normalized();
+    if(scale > 0)
+        newConfig = closest->config + scale*(newConfig-closest->config).normalized();
 
     return *closest;
 }
@@ -626,7 +642,7 @@ void RRTManager::constructSolution(const RRTNode *beginTree, const RRTNode *endT
     }
 }
 
-void RRTManager::setDomain(const JointConfig &minJointConfig, const JointConfig &maxJointConfig, int resolution)
+void RRTManager::setDomain(const JointConfig &minJointConfig, const JointConfig &maxJointConfig, unsigned long resolution)
 {
     if(minJointConfig.size() != maxJointConfig.size())
     {
