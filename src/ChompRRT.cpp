@@ -42,11 +42,17 @@ RRT_Result_t ChompRRT::growTrees(Trajectory& referenceTraj)
     _con.start = startNode->getConfig();
     _con.end = endNode->getConfig();
     _con.xi = refConfig;
+//    std::cout << "xi: " << _con.xi.transpose() << std::endl;
 
     referenceTraj = _con;
 
-    bool success = multichomp.run(_con, _constraint, _maxStepSize);
+    bool success = multichomp.run(_con, _constraint, minConfig, maxConfig, _maxStepSize);
     _con = multichomp.getTrajectory();
+//    if(success)
+//        std::cout << "Connect Succeeded" << std::endl;
+//    else
+//        std::cout << "Connect Failed" << std::endl;
+//    std::cout << "T: " << _con.xi.transpose() << std::endl;
 
     if(success)
     {

@@ -24,11 +24,13 @@ int main(int argc, char* argv[])
 //    traj.xi << -1.50, 3.00;
 
     traj.waypoints = traj.xi.size()/2;
-
+    
+    VectorXd limits(traj.state_space);
+    limits.setOnes(); limits = 5*limits;
 
     MultiChomper multichomp;
     multichomp.alpha = 0.5;
-    multichomp.run(traj, &circle, 0.2);
+    multichomp.run(traj, &circle, -limits, limits, 0.2);
 
     Drawer draw;
     draw.draw_circle(circle);

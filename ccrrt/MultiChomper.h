@@ -15,6 +15,8 @@ public:
 
     bool run(const Trajectory& trajectory,
                     Constraint* constraint,
+                    const Eigen::VectorXd& min,
+                    const Eigen::VectorXd& max,
                     double max_step_size);
 
     

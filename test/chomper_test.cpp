@@ -30,13 +30,13 @@ int main(int argc, char* argv[])
     traj.xi.resize(8);
     traj.xi << 0, 1.7, 1.2, 1.2, 2.04, 0, 3, 1;
 
-
-
     traj.waypoints = traj.xi.size()/2;
 
+    VectorXd limits(traj.state_space);
+    limits.setOnes(); limits = 5*limits;
 
     Chomper chomp;
-    chomp.initialize(traj, &circle);
+    chomp.initialize(traj, &circle, -limits, limits);
     chomp.alpha = 0.5;
 
     Drawer draw;

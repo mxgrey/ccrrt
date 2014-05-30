@@ -21,8 +21,10 @@ public:
     
     Chomper();
 
-    void initialize(const Trajectory& trajectory, Constraint* constraint);
+    void initialize(const Trajectory& trajectory, Constraint* constraint, 
+                    const Eigen::VectorXd& min, const Eigen::VectorXd& max);
     double alpha;
+    double eps;
     
     Constraint::validity_t iterate(bool quit_if_valid=false);
     
@@ -33,9 +35,14 @@ public:
     
 protected:
     
+    void _handle_joint_limits();
+    
     Trajectory _trajectory;
     Constraint* _constraint;
     Constraint::validity_t _validity;
+    
+    Eigen::VectorXd _min;
+    Eigen::VectorXd _max;
     
     Eigen::VectorXd Df;
     Eigen::VectorXd h;

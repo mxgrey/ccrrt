@@ -200,6 +200,9 @@ public:
                    const JointConfig& maxJointConfig,
                    int resolution=10000);
     
+    void getDomain(JointConfig& minJointConfig,
+                   JointConfig& maxJointConfig) const;
+    
     // Add a desired start configuration for a plan
     // Returns the tree index of this new tree
     int addStartTree(JointConfig startConfiguration);
@@ -215,7 +218,7 @@ public:
     // Or it returns -3 if the constraintProjector was unsatisfied
     int addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType);
 
-    virtual RRT_Result_t checkStatus();
+    virtual RRT_Result_t checkStatus() const;
     // Add a node to each tree while checking for connections between trees
     virtual RRT_Result_t growTrees();
     
@@ -234,6 +237,7 @@ public:
     
     // Change the max step size for future steps
     void setMaxStepSize(double newMaxStepSize);
+    double getMaxStepSize() const;
     // Maximum size that a tree may grow to
     int maxTreeSize_;
     // Number of total nodes allowed across all the trees. -1 means disabled

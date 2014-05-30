@@ -64,7 +64,7 @@ bool RRTManager::constraintProjector(JointConfig &config, const JointConfig &par
     return true;
 }
 
-RRT_Result_t RRTManager::checkStatus()
+RRT_Result_t RRTManager::checkStatus() const
 {
     if(_invalidRoot)
         return RRT_INVALID_ROOT;
@@ -440,6 +440,11 @@ void RRTManager::setMaxStepSize(double newMaxStepSize)
         trees[i]->setMaxStepSize(newMaxStepSize);
 }
 
+double RRTManager::getMaxStepSize() const
+{
+    return _maxStepSize;
+}
+
 
 int RRTManager::addStartTree(JointConfig startConfiguration)
 {
@@ -640,6 +645,12 @@ void RRTManager::setDomain(const JointConfig &minJointConfig, const JointConfig 
     _hasDomain = true;
 }
 
+void RRTManager::getDomain(JointConfig& minJointConfig, JointConfig& maxJointConfig) const
+{
+    minJointConfig = minConfig;
+    maxJointConfig = maxConfig;
+}
+
 void RRTManager::randomizeConfig(JointConfig &config)
 {
     if(!_hasDomain)
@@ -654,6 +665,8 @@ void RRTManager::randomizeConfig(JointConfig &config)
     for(int i=0; i<config.size(); i++)
         config(i) = ((double)(rand()%dResolution))/(double)(dResolution-1)
                 * (maxConfig(i) - minConfig(i)) + minConfig(i);
+    
+//    std::cout << "Rand: " << config.transpose() << std::endl;
 }
 
 void RRTManager::scaleConfig(JointConfig &config, const JointConfig &parentConfig)

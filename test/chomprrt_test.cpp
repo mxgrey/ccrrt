@@ -14,7 +14,11 @@ int main(int argc, char* argv[])
 
     std::vector<CircleConstraint*> circles;
     circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(3.1,-1), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1,2), 2, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(3.3,-0.3), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.7,-2.3), 1, 0.1));
 
     for(size_t i=0; i<circles.size(); ++i)
     {
@@ -33,17 +37,17 @@ int main(int argc, char* argv[])
     Eigen::VectorXd p(2);
     p << -3, 0;
     vis.start = p;
-    std::cout << "Start: " << rrt.addStartTree(p) << std::endl;
+    rrt.addStartTree(p);
     p << 3.4, 1.2;
     vis.end = p;
-    std::cout << "Goal: " << rrt.addGoalTree(p) << std::endl;
+    rrt.addGoalTree(p);
 
     vis.state_space = p.size();
     vis.waypoints = 1;
     vis.xi = (vis.start+vis.end)/2;
 
     Drawer draw;
-    draw.draw_trajectory(vis);
+//    draw.draw_trajectory(vis);
 
     RRT_Result_t result = RRT_NOT_FINISHED;
     size_t counter=0;
@@ -58,7 +62,7 @@ int main(int argc, char* argv[])
 
     std::cout << "Steps: " << counter << std::endl;
 
-    draw.draw_rrts(rrt, osg::Vec4(0.2,0.7,0.2,1.0), osg::Vec4(0.1,0.1,0.1,1.0));
+    draw.draw_rrts(rrt);
 
     for(size_t i=0; i<circles.size(); ++i)
     {

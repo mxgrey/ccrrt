@@ -5,12 +5,17 @@
 using namespace ccrrt;
 
 bool MultiChomper::run(const Trajectory &trajectory,
-                              Constraint *constraint,
-                              double max_step_size)
+                        Constraint *constraint, 
+                        const Eigen::VectorXd& min, 
+                        const Eigen::VectorXd& max,
+                        double max_step_size)
 {
     _waypoints.clear();
 
     assert( (size_t)trajectory.xi.size() == trajectory.state_space );
+    
+    _min = min;
+    _max = max;
 
     _start = trajectory.start;
     _end = trajectory.end;
@@ -28,6 +33,7 @@ bool MultiChomper::_go()
 {
     bool success = false;
     bool quit = false;
+    
     Waypoint waypoint = _waypoints.begin();
     Trajectory next_traj;
     next_traj.start = _start;
@@ -40,10 +46,11 @@ bool MultiChomper::_go()
     Eigen::VectorXd wp1, wp2;
     while(!success)
     {
+        success = false;
         ++debug_count;
 //        std::cout << "Loop " << debug_count << std::endl;
         size_t counter=0, max=10;
-        Chomper::initialize(next_traj, _constraint);
+        Chomper::initialize(next_traj, _constraint, _min, _max);
         while(Chomper::iterate(true) == Constraint::INVALID)
         {
             ++counter;

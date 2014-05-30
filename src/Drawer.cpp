@@ -77,6 +77,8 @@ void Drawer::draw_tree(const RRTNode &root_node, const osg::Vec4 &color)
 //                      << " C:" << current_node->numChildren() << " | " 
 //                      << current_node->getConfig().transpose() << std::endl;
             
+//            draw_marker(current_node->getConfig(), 0.025, color);
+            
             ++tracker[depth];
             tracker.push_back(0);
             ++depth;
@@ -99,12 +101,70 @@ void Drawer::draw_rrts(const RRTManager& mgr,
 {
     draw_path(mgr.solvedPlan, path_color);
     for(size_t i=0; i<mgr.getNumTrees(); ++i)
+    {
         draw_tree(*mgr.getTree(i),tree_color);
+    }
+    
+    osgAkin::Line* domain = new osgAkin::Line;
+    Eigen::VectorXd min;
+    Eigen::VectorXd max;
+    
+    mgr.getDomain(min, max);
+    domain->addVertex(akin::Translation(min[0],0,min[1]));
+    domain->addVertex(akin::Translation(min[0],0,max[1]));
+    domain->addVertex(akin::Translation(max[0],0,max[1]));
+    domain->addVertex(akin::Translation(max[0],0,min[1]));
+    domain->addVertex(akin::Translation(min[0],0,min[1]));
+    domain->setColor(osg::Vec4(0.8,0.1,0.8,1.0));
+    domain->updateVertices();
+    _geode->addDrawable(domain);
+    
+    for(size_t i=0; i<mgr.getNumTrees(); ++i)
+    {
+        const RRTNode* tree = mgr.getTree(i);
+        osg::Vec4 color = osg::Vec4(0.8f, 0.1f, 0.8f, 1.0f);
+        if(mgr.getTreeType(i) == RRT_START_TREE)
+        {
+            color = osg::Vec4(0.8,0.8,0.1,1.0);
+        }
+        else if(mgr.getTreeType(i) == RRT_GOAL_TREE)
+        {
+            color = osg::Vec4(0.1,1.0,0.1,1.0);
+        }
+            
+        draw_marker(Eigen::Vector2d(tree->getConfig()[0],tree->getConfig()[1]),
+                mgr.getMaxStepSize(), color);
+    }
+    
 }
 
-void Drawer::draw_circle(const CircleConstraint& circle)
+void Drawer::draw_marker(const Eigen::Vector2d &position, double radius, const osg::Vec4 &color)
 {
-    osgAkin::Line* line = new osgAkin::Line;
+    CircleConstraint marker(position,radius);
+    draw_circle(marker, color);
+}
+
+void Drawer::draw_circle(const CircleConstraint& circle, const osg::Vec4& color)
+{
+//    osgAkin::Line* line = new osgAkin::Line;
+    
+//    size_t res = 1000;
+//    for(size_t i=0; i<=res; ++i)
+//    {
+//        double x = circle.center.x() + circle.radius*cos(2*M_PI*i/res);
+//        double y = 0;
+//        double z = circle.center.y() + circle.radius*sin(2*M_PI*i/res);
+//        line->addVertex(akin::Translation(x,y,z));
+//    }
+    
+//    line->setColor(color);
+    
+//    line->updateVertices();
+//    _geode->addDrawable(line);
+    
+    osg::Geometry* geom = new osg::Geometry;
+    osg::Vec3Array* verts = new osg::Vec3Array;
+    verts->push_back(osg::Vec3(circle.center.x(),0,circle.center.y()));
     
     size_t res = 1000;
     for(size_t i=0; i<=res; ++i)
@@ -112,13 +172,29 @@ void Drawer::draw_circle(const CircleConstraint& circle)
         double x = circle.center.x() + circle.radius*cos(2*M_PI*i/res);
         double y = 0;
         double z = circle.center.y() + circle.radius*sin(2*M_PI*i/res);
-        line->addVertex(akin::Translation(x,y,z));
+        verts->push_back(osg::Vec3(x,y,z));
     }
+    geom->setVertexArray(verts);
     
-    line->setColor(osg::Vec4(0.8f, 0.1f, 0.1f, 1.0f));
+    osg::DrawElementsUShort* faces = new osg::DrawElementsUShort(osg::PrimitiveSet::TRIANGLES, 0);
+    for(size_t i=1; i<verts->size(); ++i)
+    {
+        faces->push_back(0);
+        faces->push_back(i);
+        
+        if(i < verts->size()-1)
+            faces->push_back(i+1);
+        else
+            faces->push_back(1);
+    }
+    geom->addPrimitiveSet(faces);
     
-    line->updateVertices();
-    _geode->addDrawable(line);
+    osg::Vec4Array* color_array = new osg::Vec4Array;
+    color_array->push_back(color);
+    geom->setColorArray(color_array);
+    geom->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE_SET);
+    
+    _geode->addDrawable(geom);
 }
 
 void Drawer::draw_vector(const Eigen::Vector2d &vec, const Eigen::Vector2d &origin)

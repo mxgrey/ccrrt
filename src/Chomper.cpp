@@ -11,7 +11,8 @@ Chomper::Chomper()
     opt_type = VELOCITY;
     _last_wp_size = 0;
     _last_ss_size = 0;
-    alpha = 0.5;
+    alpha = 0.2;
+    eps = 1e-6;
 }
 
 const Trajectory& Chomper::getTrajectory() const
@@ -24,8 +25,12 @@ Constraint* Chomper::getConstraint() const
     return _constraint;
 }
 
-void Chomper::initialize(const Trajectory& trajectory, Constraint* constraint)
+void Chomper::initialize(const Trajectory& trajectory, Constraint* constraint,
+                         const Eigen::VectorXd& min, const Eigen::VectorXd& max)
 {
+    _min = min;
+    _max = max;
+    
     _trajectory = trajectory;
     _constraint = constraint;
     
@@ -188,6 +193,9 @@ Constraint::validity_t Chomper::iterate(bool quit_if_valid)
 //    std::cout << "\ndelta:\n" << delta.transpose() << std::endl;
 
     _trajectory.xi += delta;
+    
+    _handle_joint_limits();
+    
     _validity = _constraint->getCost(h, _trajectory);
 
 //    return -Df;
@@ -201,5 +209,63 @@ void Chomper::_build_e()
     e.block(0,0,_trajectory.state_space,1) = -_trajectory.start;
     e.block(_last_wp_size*_last_ss_size,0,_trajectory.state_space,1) = _trajectory.end;
 }
+
+void Chomper::_handle_joint_limits()
+{
+    bool finished=false;
+    
+    size_t counter=0;
+    double maxV = 0;
+    size_t maxC = 0;
+    while(!finished)
+    {
+        ++counter;
+        finished = true;
+        for(int i=0; i<_last_wp_size; ++i)
+        {
+            for(int j=0; j<_last_ss_size; ++j)
+            {
+                double& q = _trajectory.xi[i*_last_ss_size+j];
+                if( q < _min[j]+fabs(eps) )
+                {
+                    delta[j] = _min[j]-q+2*fabs(eps);
+                    finished = false;
+                }
+                else if( _max[j]-fabs(eps) < q )
+                {
+                    delta[j] = _max[j]-2*fabs(eps)-q;
+                    finished = false;
+                }
+                else
+                {
+                    delta[j] = 0;
+                }
+                
+                if( fabs(delta[j]) > maxV )
+                {
+                    maxV = fabs(delta[j]);
+                    maxC = j;
+                }
+            }
+        }
+        
+        if(!finished)
+        {
+            delta = Ainv*delta;
+            _trajectory.xi += delta*maxV/fabs(delta[maxC]);
+            
+            if(counter > 5)
+            {
+                std::cout << "COULD NOT SATISFY JOINT LIMITS\n" 
+                          << _trajectory.xi.transpose() << std::endl;
+                return;
+            }
+        }
+    }
+}
+
+
+
+
 
 
