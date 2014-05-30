@@ -13,7 +13,8 @@ public:
         
         INVALID = 0,
         AT_RISK,
-        VALID
+        VALID,
+        STUCK
         
     } validity_t;
     

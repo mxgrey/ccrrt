@@ -6,7 +6,7 @@ using namespace ccrrt;
 
 MultiChomper::MultiChomper()
 {
-    max_attempts = 10;
+    max_attempts = 5;
 }
 
 bool MultiChomper::run(const Trajectory &trajectory,

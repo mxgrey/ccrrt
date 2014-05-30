@@ -154,9 +154,10 @@ Constraint::validity_t Chomper::iterate(bool quit_if_valid)
     }
     else
     {
-        HAinvHt_inv.setZero();
-        Ainv_Ht_HAinvHt_inv.setZero();
-        std::cout << "singular" << std::endl;
+//        HAinvHt_inv.setZero();
+//        Ainv_Ht_HAinvHt_inv.setZero();
+//        std::cout << "stuck" << std::endl;
+        return Constraint::STUCK;
     }
 
 //    std::cout << "\nHAinvHt_inv:\n" << HAinvHt_inv << std::endl;
