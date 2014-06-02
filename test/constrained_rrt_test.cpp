@@ -26,48 +26,48 @@ int main(int argc, char* argv[])
 //    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
     
     // Super-Tiny Passage
-    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(1,2), 2, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(1,3.99), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(2.8,-0.3), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(4.2,-0.3), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
-    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(0,0), 2, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(-1,2), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1,2), 2, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1,3.99), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(2.8,-0.3), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(4.2,-0.3), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
+//    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
 
 
     // Multiple Narrow Passages
-//    circles.push_back(new CircleConstraint(Vector2d(-1.85,-0.98), 0.45, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-2.2,-0.55), 0.4, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-2.2,0.2), 0.4, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-1.8,0.6), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-1.7,1.2), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-1.5,2), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-1.0,2.5), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1.85,-0.98), 0.45, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-2.2,-0.55), 0.4, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-2.2,0.2), 0.4, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1.8,0.6), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1.7,1.2), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1.5,2), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1.0,2.5), 0.5, 0.1));
 
-//    circles.push_back(new CircleConstraint(Vector2d(2.4,0.6), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(2.3,1.2), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(2.05,1.55), 0.3, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.85,2), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.1,2.5), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.07,2.89), 0.3, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.4,0.6), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.3,1.2), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.05,1.55), 0.3, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.85,2), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.1,2.5), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.07,2.89), 0.3, 0.1));
 
-//    circles.push_back(new CircleConstraint(Vector2d(2.80,-0.85), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(2.05,-0.35), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.50,-0.0), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.40,0.5), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.29,1.15), 0.5, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.10,1.69), 0.3, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(0.685,1.585), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.80,-0.85), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.05,-0.35), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.50,-0.0), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.40,0.5), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.29,1.15), 0.5, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.10,1.69), 0.3, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(0.685,1.585), 0.5, 0.1));
 
-//    circles.push_back(new CircleConstraint(Vector2d(0.0,3.2), 0.8, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1,4.2), 1, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(3.0,0.25), 0.6, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(4.2,-0.3), 1, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(-0,-2.6), 0.6, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(2.1,-1.6), 0.6, 0.1));
-//    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(0.0,3.2), 0.8, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1,4.2), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(3.0,0.25), 0.6, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(4.2,-0.3), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-1,-2), 1, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(-0,-2.6), 0.6, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(2.1,-1.6), 0.6, 0.1));
+    circles.push_back(new CircleConstraint(Vector2d(1.3,-2.3), 1, 0.1));
 
 
     

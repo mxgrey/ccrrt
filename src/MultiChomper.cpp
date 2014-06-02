@@ -36,7 +36,7 @@ bool MultiChomper::run(const Trajectory &trajectory,
 
 bool MultiChomper::_go()
 {
-    bool success = false;
+    bool success = false, stuck = false;
     bool quit = false;
     
     Waypoint waypoint = _waypoints.begin();
@@ -49,7 +49,8 @@ bool MultiChomper::_go()
 
     size_t debug_count = 0;
     Eigen::VectorXd wp1, wp2;
-    while(!success)
+    Eigen::VectorXd last_added_waypoint = next_traj.xi;
+    while(!success && !stuck)
     {
         success = false;
         ++debug_count;
@@ -94,12 +95,22 @@ bool MultiChomper::_go()
                 next_traj.start = wp1;
                 next_traj.end = wp2;
                 next_traj.xi = (wp1+wp2)/2;
+                if( (next_traj.xi-last_added_waypoint).norm() < 1e-6 )
+                {
+                    stuck = true;
+                    break;
+                }
+
                 _waypoints.insert(check, 1, next_traj.xi);
+                last_added_waypoint = next_traj.xi;
                 waypoint = check;
                 --waypoint;
                 break;
             }
         }
+
+        if(stuck)
+            break;
 
         if(!success)
             continue;
@@ -112,6 +123,12 @@ bool MultiChomper::_go()
             next_traj.start = wp1;
             next_traj.end = wp2;
             next_traj.xi = (wp1+wp2)/2;
+            if( (next_traj.xi-last_added_waypoint).norm() < 1e-6 )
+            {
+                stuck = true;
+                break;
+            }
+
             _waypoints.push_back(next_traj.xi);
             waypoint = _waypoints.end();
             --waypoint;
@@ -133,7 +150,10 @@ bool MultiChomper::_go()
     _trajectory.waypoints = counter;
 //    std::cout << "final count: " << counter << std::endl;
 
-    return success;
+    if(stuck)
+        std::cout << "Got stuck!!" << std::endl;
+
+    return success && !stuck;
 }
 
 Eigen::VectorXd MultiChomper::_interpolate(const Eigen::VectorXd &start,

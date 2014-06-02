@@ -15,6 +15,8 @@ RRT_Result_t ChompRRT::growTrees(Trajectory& referenceTraj)
     assert( trees.size() == 2
             && "ChompRRT is only designed to handle 1 start tree and 1 goal tree!");
 
+//    std::cout << " ---- grow tree ---- " << std::endl;
+
     RRT_Result_t check = checkStatus();
     if(check != RRT_NOT_FINISHED)
         return check;

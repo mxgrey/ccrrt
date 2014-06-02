@@ -189,6 +189,79 @@ void Drawer::draw_circle(const CircleConstraint& circle, const osg::Vec4& color)
     _geode->addDrawable(geom);
 }
 
+void Drawer::draw_line_constraint(const LineConstraint &line, const osg::Vec4 &color)
+{
+    osg::Geometry* geom = new osg::Geometry;
+    osg::Vec3Array* verts = new osg::Vec3Array;
+    osg::Vec4Array* colors = new osg::Vec4Array;
+
+    verts->push_back(osg::Vec3(line.start[0],0,line.start[1]));                 // 0
+    colors->push_back(osg::Vec4(1,1,1,1));
+
+    verts->push_back(osg::Vec3(line.end[0],0,line.end[1]));                     // 1
+    colors->push_back(osg::Vec4(1,1,1,1));
+
+    Eigen::Vector2d v = line.end - line.start;
+    Eigen::Vector2d perp(-v[1],v[0]);
+    perp = perp.normalized()*line.width/2;
+    Eigen::Vector2d w = perp.normalized()*line.width*line.parab_factor/2;
+
+    osg::Vec4 midcolor = (osg::Vec4(1,1,1,1)-color)/2 + color;
+    verts->push_back(osg::Vec3(line.start[0]+w[0],0,line.start[1]+w[1]));       // 2
+    colors->push_back(midcolor);
+
+    verts->push_back(osg::Vec3(line.end[0]+w[0],0,line.end[1]+w[1]));           // 3
+    colors->push_back(midcolor);
+
+    verts->push_back(osg::Vec3(line.start[0]-w[0],0,line.start[1]-w[1]));       // 4
+    colors->push_back(midcolor);
+
+    verts->push_back(osg::Vec3(line.end[0]-w[0],0,line.end[1]-w[1]));           // 5
+    colors->push_back(midcolor);
+
+    verts->push_back(osg::Vec3(line.start[0]+perp[0],0,line.start[1]+perp[1])); // 6
+    colors->push_back(color);
+
+    verts->push_back(osg::Vec3(line.end[0]+perp[0],0,line.end[1]+perp[1]));     // 7
+    colors->push_back(color);
+
+    verts->push_back(osg::Vec3(line.start[0]-perp[0],0,line.start[1]-perp[1])); // 8
+    colors->push_back(color);
+
+    verts->push_back(osg::Vec3(line.end[0]-perp[0],0,line.end[1]-perp[1]));     // 9
+    colors->push_back(color);
+
+    geom->setVertexArray(verts);
+
+    osg::DrawElementsUShort* faces = new osg::DrawElementsUShort(osg::PrimitiveSet::QUADS, 0);
+    faces->push_back(0);
+    faces->push_back(1);
+    faces->push_back(3);
+    faces->push_back(2);
+
+    faces->push_back(0);
+    faces->push_back(1);
+    faces->push_back(5);
+    faces->push_back(4);
+
+    faces->push_back(2);
+    faces->push_back(3);
+    faces->push_back(7);
+    faces->push_back(6);
+
+    faces->push_back(4);
+    faces->push_back(5);
+    faces->push_back(9);
+    faces->push_back(8);
+
+    geom->addPrimitiveSet(faces);
+
+    geom->setColorArray(colors);
+    geom->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+
+    _geode->addDrawable(geom);
+}
+
 void Drawer::draw_vector(const Eigen::Vector2d &vec, const Eigen::Vector2d &origin)
 {
     osgAkin::LineTree* vector = new osgAkin::LineTree;

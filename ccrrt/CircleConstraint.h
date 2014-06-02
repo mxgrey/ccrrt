@@ -36,6 +36,6 @@ protected:
 
 };
 
-}
+} // namespace ccrrt
 
 #endif // CIRCLECONSTRAINT_H

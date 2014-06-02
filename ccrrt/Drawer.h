@@ -5,6 +5,7 @@
 #include "../ccrrt/Trajectory.h"
 #include "../ccrrt/CircleConstraint.h"
 #include "../ccrrt/RRTManager.h"
+#include "../ccrrt/LineConstraint.h"
 
 namespace ccrrt {
 
@@ -29,6 +30,9 @@ public:
     
     void draw_circle(const CircleConstraint& circle,
                      const osg::Vec4& color=osg::Vec4(0.8f, 0.1f, 0.1f, 1.0f));
+
+    void draw_line_constraint(const LineConstraint& line,
+                              const osg::Vec4& color=osg::Vec4(0.2,0.2,1.0,1.0));
     
     void draw_vector(const Eigen::Vector2d& vec, const Eigen::Vector2d& origin);
     
