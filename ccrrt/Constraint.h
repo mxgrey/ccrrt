@@ -20,12 +20,15 @@ public:
     
     virtual size_t getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj) = 0;
     
+//    virtual void getCostGradient(Eigen::VectorXd& gradient, const Eigen::VectorXd& config);
+    
     virtual validity_t getCost(Eigen::VectorXd& cost, 
                                const ccrrt::Trajectory& traj) = 0;
 
     virtual validity_t getValidity(const ccrrt::Trajectory& traj) = 0;
     
     virtual size_t constraintDimension() const = 0;
+    
 
     // TODO: Consider making this a function of Trajectory instead
     // Counter-argument: Maybe someone will want their own version of speed calculation for a

@@ -1,8 +1,11 @@
 
-#include "../ccrrt/Drawer.h"
 #include "../ccrrt/ConstraintGroup.h"
+#include "../ccrrt/BlockConstraint.h"
+
 #include "../ccrrt/ChompRRT.h"
-#include "time.h"
+#include "../ccrrt/ConstrainedRRT.h"
+
+#include "../ccrrt/Drawer.h"
 
 using namespace ccrrt;
 using namespace Eigen;
@@ -10,34 +13,40 @@ using namespace Eigen;
 int main(int argc, char* argv[])
 {
     ChompRRT rrt;
-
+//    ConstrainedRRT rrt;
+    
     ConstraintGroup group;
-    std::vector<LineConstraint*> line_constraints;
-
-    line_constraints.push_back(new LineConstraint(Vector2d(0,-0.1), Vector2d(1,-0.1), 2, 1e-5));
-    rrt.multichomp.max_attempts = 40;
-
-    for(size_t i=0; i<line_constraints.size(); ++i)
+    
+    std::vector<BlockConstraint*> block_constraints;
+    
+    block_constraints.push_back(new BlockConstraint(Vector2d(0,-0.1), 0, 1, 0.5, 0.1));
+    block_constraints.push_back(new BlockConstraint(Vector2d(0, 0.405), 0, 1, 0.5, 0.1));
+//    block_constraints.push_back(new BlockConstraint(Vector2d(0, 3), 0, 1, 5, 0.1));
+//    block_constraints.push_back(new BlockConstraint(Vector2d(0, -2.6), 0, 1, 5, 0.1));
+    
+    
+//    rrt.multichomp.max_attempts = 10;
+    
+    for(size_t i=0; i<block_constraints.size(); ++i)
     {
-        group.addConstraint(line_constraints[i]);
+        group.addConstraint(block_constraints[i]);
     }
-
-
+    
     Eigen::VectorXd limits(2);
     limits << 5,5;
-    rrt.setDomain(-limits, limits);
+    rrt.setDomain(-limits,limits);
     rrt.setConstraint(&group);
-
+    
     Eigen::VectorXd p(2);
-    p << -1, 0;
+    p << -2, 0;
     rrt.addStartTree(p);
     p << 2, 0;
     rrt.addGoalTree(p);
-
+    
     Trajectory vis;
-
+    
     Drawer draw;
-
+    
     std::cout << "Start" << std::endl;
     RRT_Result_t result = RRT_NOT_FINISHED;
     size_t counter=0;
@@ -50,6 +59,7 @@ int main(int argc, char* argv[])
     {
         ++counter;
         result = rrt.growTrees(vis);
+//        result = rrt.growTrees();
     }
 
     clock_t end_time;
@@ -65,14 +75,12 @@ int main(int argc, char* argv[])
 
     draw.draw_rrts(rrt);
 
-    for(size_t i=0; i<line_constraints.size(); ++i)
+    for(size_t i=0; i<block_constraints.size(); ++i)
     {
-        draw.draw_line_constraint(*line_constraints[i]);
+        draw.draw_block(*block_constraints[i]);
     }
 
     draw.run();
-
+    
     return 0;
 }
-
-

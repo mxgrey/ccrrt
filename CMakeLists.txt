@@ -4,6 +4,7 @@ project(ccrrt)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 find_package(Eigen REQUIRED)
 include_directories(${Eigen_INCLUDE_DIRS})
+message(STATUS "EIGEN: ${Eigen_INCLUDE_DIRS}")
 
 add_definitions("-Wall")
 

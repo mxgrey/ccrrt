@@ -39,15 +39,15 @@ size_t CircleConstraint::_basicJacobian(Eigen::Matrix<double,1,2> &J,
 {
     Vector2d config = Vector2d(traj.xi[2*waypoint],traj.xi[2*waypoint+1]);
     
-    Vector2d grad_c;
-    _basicCostGrad(grad_c, config);
-    
     double c = _basicCost(config);
     if(c == 0)
     {
         J.setZero();
         return 0;
     }
+    
+    Vector2d grad_c;
+    _basicCostGrad(grad_c, config);
     
     VectorXd vel;
     getVelocity(vel, traj, waypoint);
