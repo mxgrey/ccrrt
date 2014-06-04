@@ -41,6 +41,7 @@ bool MultiChomper::_go()
     
     bool bad_wp = false;
     double norm_check = (_start-_end).norm();
+    double backup_check;
     bool print = false;
     
     Waypoint waypoint = _waypoints.begin();
@@ -98,6 +99,7 @@ bool MultiChomper::_go()
         size_t counter=0;
 //        norm_check = (next_traj.start-next_traj.end).norm();
         valid = Chomper::initialize(next_traj, _constraint, _min, _max);
+        backup_check = (_start-next_traj.start).norm();
         while(valid == Constraint::INVALID)
 //        while(counter < max_attempts)
         {
@@ -109,17 +111,25 @@ bool MultiChomper::_go()
                 bad_wp = true;
                 break;
             }
-            
-//            if( (_trajectory.start-_trajectory.xi).norm() > norm_check
-//                    || (_trajectory.end-_trajectory.xi).norm() > norm_check )
+
+
+            // Make sure we don't cross over other paths in our tree
             if( (_end-_trajectory.xi).norm() > norm_check )
             {
                 quit = true;
                 bad_wp = true;
                 break;
             }
+
+            // Make sure we don't cross over ourselves
+            if( (_trajectory.start-_trajectory.xi).norm() <= backup_check )
+            {
+                quit = true;
+                bad_wp = true;
+                break;
+            }
+
         }
-        
         
         if(!bad_wp)
             *waypoint = _trajectory.xi;
@@ -128,18 +138,21 @@ bool MultiChomper::_go()
             break;
         
         size_t loop_count = 0;
-        for(Waypoint check=_waypoints.begin(); check != _waypoints.end(); ++check)
+        if(counter > 0)
         {
-            ++loop_count;
-            if(check == waypoint)
-                continue;
-            
-            if( (*check - *waypoint).norm() < _max_step/10 )
+            for(Waypoint check=_waypoints.begin(); check != _waypoints.end(); ++check)
             {
-//                std::cout << "HIT LOOP " << loop_count << std::endl;
-                *waypoint = last_added_waypoint;
-                quit = true;
-                break;
+                ++loop_count;
+                if(check == waypoint)
+                    continue;
+
+                if( (*check - *waypoint).norm() < _max_step/10 )
+                {
+    //                std::cout << "HIT LOOP " << loop_count << std::endl;
+                    *waypoint = last_added_waypoint;
+                    quit = true;
+                    break;
+                }
             }
         }
         if(quit)
