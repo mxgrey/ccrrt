@@ -610,28 +610,37 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
         stepConfigTowards(currentConfig, target);
 
         if(!constraintProjector(currentConfig, node->getConfig()))
+        {
+            node->type = RRTNode::KEY;
             return NULL;
+        }
 
         node->scaleJointConfig(currentConfig);
 
         if(!collisionChecker(currentConfig, node->getConfig()))
+        {
+            node->type = RRTNode::KEY;
             return NULL;
+        }
 
         node = node->attemptAddChild(currentConfig);
         ++treeSizeCounter[treeID];
         if(node == NULL)
         {
             std::cerr << "Attempt connect code is broken!" << std::endl;
+            node->type = RRTNode::KEY;
             return NULL;
         }
 
         if(counter++ > 2*(maxConfig-minConfig).norm()/_maxStepSize)
         {
             std::cout << "Overflow in connection attempt" << std::endl;
+            node->type = RRTNode::KEY;
             return NULL;
         }
     }
-
+    
+    node->type = RRTNode::KEY;
     return node;
 }
 
