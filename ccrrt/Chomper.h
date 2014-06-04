@@ -21,7 +21,7 @@ public:
     
     Chomper();
 
-    void initialize(const Trajectory& trajectory, Constraint* constraint, 
+    Constraint::validity_t initialize(const Trajectory& trajectory, Constraint* constraint, 
                     const Eigen::VectorXd& min, const Eigen::VectorXd& max);
     double alpha;
     double eps;

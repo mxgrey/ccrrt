@@ -19,6 +19,8 @@ public:
     
     size_t getJacobian(Eigen::MatrixXd &J, const Trajectory &traj);
     
+    validity_t getCostGradient(Eigen::VectorXd& gradient, const Eigen::VectorXd& config);
+    
     validity_t getCost(Eigen::VectorXd &cost, const Trajectory &traj);
     
     validity_t getValidity(const Trajectory &traj);

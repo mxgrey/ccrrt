@@ -8,12 +8,12 @@ ConstrainedRRT::ConstrainedRRT(int maxTreeSize,
                                double collisionCheckStepSize) :
     RRTManager(maxTreeSize, maxStepSize, collisionCheckStepSize)
 {
-    _constraint = NULL;
+    _constraints = NULL;
 }
 
 bool ConstrainedRRT::collisionChecker(JointConfig& config, const JointConfig& parentConfig)
 {
-    if(_constraint==NULL)
+    if(_constraints==NULL)
         return true;
     
     assert( config.size() == parentConfig.size() 
@@ -54,10 +54,10 @@ bool ConstrainedRRT::collisionChecker(JointConfig& config, const JointConfig& pa
         _col.xi = config;
     }
     
-    return _constraint->getCost(_cost, _col) != Constraint::INVALID;
+    return _constraints->getCost(_cost, _col) != Constraint::INVALID;
 }
 
-void ConstrainedRRT::setConstraint(Constraint *constraint)
+void ConstrainedRRT::setConstraints(Constraint *constraints)
 {
-    _constraint = constraint;
+    _constraints = constraints;
 }

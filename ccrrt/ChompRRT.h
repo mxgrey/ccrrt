@@ -14,7 +14,8 @@ public:
              double maxStepSize=0.1,
              double collisionCheckStepSize=0.1);
 
-    RRT_Result_t growTrees(Trajectory& referenceTraj);
+    RRT_Result_t growTrees();
+    RRTNode* attemptConnect(RRTNode *&node, const JointConfig &target, size_t treeID);
 
     MultiChomper multichomp;
 

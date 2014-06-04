@@ -52,6 +52,10 @@ protected:
     osg::Group* _root;
     osg::Geode* _geode;
     
+    osg::Geometry* _markers;
+    osg::Vec3Array* _points;
+    osg::Vec4Array* _pointColors;
+    
     std::vector<osgAkin::Line*> _lines;
 };
 

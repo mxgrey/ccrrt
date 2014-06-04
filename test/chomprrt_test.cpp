@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     Eigen::VectorXd limits(2);
     limits << 5, 5;
     rrt.setDomain(-limits,limits);
-    rrt.setConstraint(&group);
+    rrt.setConstraints(&group);
 
     Trajectory vis;
 
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
     while(RRT_NOT_FINISHED == result)
     {
         ++counter;
-        result = rrt.growTrees(vis);
+        result = rrt.growTrees();
         
 //        if(counter > 50)
 //            break;

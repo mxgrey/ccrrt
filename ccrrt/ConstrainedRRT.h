@@ -16,12 +16,12 @@ public:
     
     bool collisionChecker(JointConfig& config, const JointConfig& parentConfig);
     
-    void setConstraint(Constraint* constraint);
+    void setConstraints(Constraint* constraints);
     
 protected:
     
     Trajectory _col;
-    Constraint* _constraint;
+    Constraint* _constraints;
     Eigen::VectorXd _cost;
     
 };

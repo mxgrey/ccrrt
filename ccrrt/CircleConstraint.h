@@ -14,6 +14,8 @@ public:
     
     size_t getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj);
     
+    validity_t getCostGradient(Eigen::VectorXd &gradient, const Eigen::VectorXd &config);
+    
     validity_t getCost(Eigen::VectorXd& cost, 
                        const ccrrt::Trajectory& traj);
 
@@ -28,7 +30,7 @@ public:
 protected:
 
     double _basicCost(const Eigen::Vector2d& config);
-    void _basicCostGrad(Eigen::Vector2d& grad_c, const Eigen::Vector2d& config);
+    validity_t _basicCostGrad(Eigen::Vector2d& grad_c, const Eigen::Vector2d& config);
     size_t _basicJacobian(Eigen::Matrix<double,1,2>& J,
                           const ccrrt::Trajectory& traj,
                           size_t waypoint);

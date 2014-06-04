@@ -129,6 +129,15 @@ inline std::ostream& operator<<(std::ostream& oStrStream, const RRT_Tree_t type)
 class RRTNode
 {
 public:
+    
+    typedef enum {
+        
+        NORMAL=0,
+        KEY
+        
+    } point_t;
+    
+    point_t type;
 
     JointConfig config;
     const JointConfig& getConfig() const;
@@ -192,6 +201,7 @@ protected:
 class RRTManager
 {
 public:
+    
     RRTManager(int maxTreeSize=10000,
                double maxStepSize=0.3,
                double collisionCheckStepSize=0.3);
@@ -281,7 +291,7 @@ protected:
     
 
     RRTNode* lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t connectTargetType);
-    virtual RRTNode* attemptConnect(RRTNode* begin, const RRTNode* target);
+    virtual RRTNode* attemptConnect(RRTNode*& node, const JointConfig& target, size_t treeID);
     void constructSolution(const RRTNode* beginTree, const RRTNode* endTree);
     bool _hasSolution;
     bool _invalidRoot;

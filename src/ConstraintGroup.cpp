@@ -26,6 +26,28 @@ size_t ConstraintGroup::getJacobian(Eigen::MatrixXd& J, const Trajectory& traj)
     return rank;
 }
 
+Constraint::validity_t ConstraintGroup::getCostGradient(Eigen::VectorXd &gradient, 
+                                      const Eigen::VectorXd &config)
+{
+    validity_t result = VALID;
+    validity_t tempresult = VALID;
+    Eigen::VectorXd tempgrad;
+    for(size_t i=0; i<_constraints.size(); ++i)
+    {
+        tempresult = _constraints[i]->getCostGradient(tempgrad, config);
+        if(i==0)
+            gradient = tempgrad;
+        else
+            gradient += tempgrad;
+        
+        if((int)tempresult < (int)result)
+            result = tempresult;
+    }
+    
+    gradient = gradient/_constraints.size();
+    return result;
+}
+
 Constraint::validity_t ConstraintGroup::getCost(Eigen::VectorXd& cost,
                                                 const Trajectory& traj)
 {

@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     Eigen::VectorXd limits(2);
     limits << 5, 5;
     rrt.setDomain(-limits,limits);
-    rrt.setConstraint(&group);
+    rrt.setConstraints(&group);
     
     Eigen::VectorXd p(2);
     p << -3, 0;

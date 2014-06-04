@@ -12,6 +12,7 @@ Chomper::Chomper()
     _last_wp_size = 0;
     _last_ss_size = 0;
     alpha = 0.2;
+//    alpha = 0.01;
     eps = 1e-6;
 }
 
@@ -25,7 +26,7 @@ Constraint* Chomper::getConstraint() const
     return _constraint;
 }
 
-void Chomper::initialize(const Trajectory& trajectory, Constraint* constraint,
+Constraint::validity_t Chomper::initialize(const Trajectory& trajectory, Constraint* constraint,
                          const Eigen::VectorXd& min, const Eigen::VectorXd& max)
 {
     _min = min;
@@ -51,6 +52,7 @@ void Chomper::initialize(const Trajectory& trajectory, Constraint* constraint,
     Ainv_Ht_HAinvHt_inv.resize(_nm,c);
 
     _validity = _constraint->getCost(h, _trajectory);
+    return _validity;
 }
 
 void Chomper::_generate_A(int state_space, int waypoints)

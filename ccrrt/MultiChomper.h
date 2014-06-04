@@ -27,8 +27,6 @@ protected:
 
     bool _go();
     bool _check_step_sizes();
-    Eigen::VectorXd _interpolate(const Eigen::VectorXd& start,
-                                 const Eigen::VectorXd& end);
     
     Eigen::VectorXd _start;
     Eigen::VectorXd _end;

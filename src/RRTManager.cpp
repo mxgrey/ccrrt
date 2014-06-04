@@ -66,6 +66,16 @@ bool RRTManager::constraintProjector(JointConfig &config, const JointConfig &par
 
 RRT_Result_t RRTManager::checkStatus() const
 {
+    if(_iterations%50 == 0)
+    {
+        std::cout << "Progress: ";
+        for(size_t i=0; i<trees.size(); ++i)
+        {
+            std::cout << "Tree " << i << ": " << treeSizeCounter[i] << " | ";
+        }
+        std::cout << std::endl;
+    }
+    
     if(_invalidRoot)
         return RRT_INVALID_ROOT;
 
@@ -304,6 +314,7 @@ RRTNode::RRTNode(JointConfig mConfig, double maxStepSize, RRTNode *mParent)
     maxStepSize_ = maxStepSize;
     hasChildren_ = false;
     numPrecThresh = 1e-10;
+    type = NORMAL;
 }
 
 const JointConfig& RRTNode::getConfig() const
@@ -568,6 +579,7 @@ RRTNode* RRTManager::lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t
 {
     RRTNode* goalCandidate = NULL;
     double eval = INFINITY;
+    size_t treeID = 0;
     for(size_t i=0; i<trees.size(); i++)
     {
         if(treeTypeTracker[i] == connectTargetType)
@@ -579,39 +591,48 @@ RRTNode* RRTManager::lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t
             {
                 eval = evalCheck;
                 goalCandidate = goalCheck;
+                treeID = i;
             }
         }
     }
     
-    return attemptConnect(goalCandidate, targetNode);
+    return attemptConnect(goalCandidate, targetNode->getConfig(), treeID);
 }
 
-RRTNode* RRTManager::attemptConnect(RRTNode *begin, const RRTNode *target)
+RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, size_t treeID)
 {
-    RRTNode* currentNode = begin;
-    JointConfig currentConfig = begin->getConfig();
+    JointConfig currentConfig = node->getConfig();
+    
+    size_t counter=0;
 
-    while( (currentNode->getConfig()-target->getConfig()).norm() > _maxStepSize )
+    while( (node->getConfig()-target).norm() > _maxStepSize )
     {
-        stepConfigTowards(currentConfig, target->getConfig());
+        stepConfigTowards(currentConfig, target);
 
-        if(!constraintProjector(currentConfig, currentNode->getConfig()))
+        if(!constraintProjector(currentConfig, node->getConfig()))
             return NULL;
 
-        currentNode->scaleJointConfig(currentConfig);
+        node->scaleJointConfig(currentConfig);
 
-        if(!collisionChecker(currentConfig, currentNode->getConfig()))
+        if(!collisionChecker(currentConfig, node->getConfig()))
             return NULL;
 
-        currentNode = currentNode->attemptAddChild(currentConfig);
-        if(currentNode == NULL)
+        node = node->attemptAddChild(currentConfig);
+        ++treeSizeCounter[treeID];
+        if(node == NULL)
         {
             std::cerr << "Attempt connect code is broken!" << std::endl;
             return NULL;
         }
+
+        if(counter++ > 2*(maxConfig-minConfig).norm()/_maxStepSize)
+        {
+            std::cout << "Overflow in connection attempt" << std::endl;
+            return NULL;
+        }
     }
 
-    return currentNode;
+    return node;
 }
 
 void RRTManager::constructSolution(const RRTNode *beginTree, const RRTNode *endTree)

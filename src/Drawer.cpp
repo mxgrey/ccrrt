@@ -1,5 +1,6 @@
 
 #include "../ccrrt/Drawer.h"
+#include "osg/Point"
 
 using namespace ccrrt;
 using namespace Eigen;
@@ -11,11 +12,17 @@ Drawer::Drawer()
     _root->addChild(_geode);
     _geode->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF);
     
-    osg::LineWidth* lineWidth = new osg::LineWidth(3.0f);
-    _geode->getOrCreateStateSet()->setAttributeAndModes(lineWidth);
+    _geode->getOrCreateStateSet()->setAttributeAndModes(new osg::LineWidth(3.0f));
+    _geode->getOrCreateStateSet()->setAttributeAndModes(new osg::Point(5.0f));
+    
     
     viewer.getCamera()->setClearColor(osg::Vec4(0.9f,0.9f,0.9f,1.0f));
     viewer.setSceneData(_root);
+    
+    _markers = new osg::Geometry;
+    _points = new osg::Vec3Array;
+    _pointColors = new osg::Vec4Array;
+    _geode->addDrawable(_markers);
 }
 
 void Drawer::draw_trajectory(const Trajectory &traj, const osg::Vec4 &color)
@@ -78,7 +85,14 @@ void Drawer::draw_tree(const RRTNode &root_node, const osg::Vec4 &color)
 //                      << " C:" << current_node->numChildren() << " | " 
 //                      << current_node->getConfig().transpose() << std::endl;
             
-            draw_marker(current_node->getConfig(), 0.025, color);
+            osg::Vec4 mColor = color;
+            if(current_node->type == RRTNode::NORMAL)
+                mColor = osg::Vec4(0.1,0.7,0.7,1.0);
+            
+            if(current_node->type == RRTNode::KEY)
+                mColor = osg::Vec4(0.8,0.1,0.1,1.0);
+            
+            draw_marker(current_node->getConfig(), 0.025, mColor);
             
             ++tracker[depth];
             tracker.push_back(0);
@@ -147,10 +161,18 @@ void Drawer::draw_rrts(const RRTManager& mgr,
     
 }
 
-void Drawer::draw_marker(const Eigen::Vector2d &position, double radius, const osg::Vec4 &color)
+void Drawer::draw_marker(const Eigen::Vector2d &position, double , const osg::Vec4 &color)
 {
-    CircleConstraint marker(position,radius);
-    draw_circle(marker, color);
+    _points->push_back(osg::Vec3(position[0],0,position[1]));
+    _pointColors->push_back(color);
+    
+    osg::DrawElementsUInt* pointPrim = new osg::DrawElementsUInt(osg::PrimitiveSet::POINTS, 0);
+    pointPrim->push_back(_points->size()-1);
+    
+    _markers->setVertexArray(_points);
+    _markers->setColorArray(_pointColors);
+    _markers->setColorBinding(osg::Geometry::BIND_PER_PRIMITIVE_SET);
+    _markers->addPrimitiveSet(pointPrim);
 }
 
 void Drawer::draw_circle(const CircleConstraint& circle, const osg::Vec4& color)

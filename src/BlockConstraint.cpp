@@ -47,6 +47,16 @@ size_t BlockConstraint::getJacobian(MatrixXd &J, const Trajectory &traj)
     return 0;
 }
 
+Constraint::validity_t BlockConstraint::getCostGradient(VectorXd& gradient, const VectorXd& config)
+{
+    Vector2d grad2d;
+    Vector2d config2d = config.block<2,1>(0,0);
+    
+    _basicCostGrad(grad2d, config2d);
+    gradient = VectorXd(grad2d);
+    return _basicValidity(config2d);
+}
+
 size_t BlockConstraint::_basicJacobian(Eigen::Matrix<double, 1, 2> &J,
                                        const Trajectory &traj,
                                        size_t waypoint)

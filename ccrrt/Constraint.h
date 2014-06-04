@@ -20,7 +20,7 @@ public:
     
     virtual size_t getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj) = 0;
     
-//    virtual void getCostGradient(Eigen::VectorXd& gradient, const Eigen::VectorXd& config);
+    virtual validity_t getCostGradient(Eigen::VectorXd& gradient, const Eigen::VectorXd& config) = 0;
     
     virtual validity_t getCost(Eigen::VectorXd& cost, 
                                const ccrrt::Trajectory& traj) = 0;
