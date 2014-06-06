@@ -624,6 +624,7 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
         }
 
         node = node->attemptAddChild(currentConfig);
+//        std::cout << "Adding config: " << currentConfig.transpose() << std::endl;
         ++treeSizeCounter[treeID];
         if(node == NULL)
         {
