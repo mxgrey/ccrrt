@@ -36,7 +36,14 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
             return false;
         
         config = config - gamma*gradient;
+        for(size_t i=0; i<_domainSize; ++i)
+        {
+            if( config[i] < minConfig[i] || maxConfig[i] < config[i] )
+                return false;
+        }
+        
         result = _projected_constraints->getCostGradient(gradient, config);
+        
         
         if( (config-parentConfig).norm() < stuck_distance )
             return false;
