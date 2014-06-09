@@ -12,10 +12,11 @@ public:
     
     ConstraintGroup();
     
-    size_t getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj);
-    validity_t getCostGradient(Eigen::VectorXd& gradient, const Eigen::VectorXd& config);
-    validity_t getCost(Eigen::VectorXd& cost, const ccrrt::Trajectory& traj);
-    validity_t getValidity(const Trajectory &traj);
+    validity_t getCostGradient(Eigen::VectorXd& gradient,
+                               const Eigen::VectorXd& parent,
+                               const Eigen::VectorXd& config,
+                               const Eigen::VectorXd& target);
+    validity_t getValidity(const Eigen::VectorXd &config);
     size_t constraintDimension() const;
     
     void addConstraint(Constraint* constraint);

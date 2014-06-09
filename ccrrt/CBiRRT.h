@@ -1,11 +1,12 @@
 #ifndef CBIRRT_H
 #define CBIRRT_H
 
-#include "ConstrainedRRT.h"
+#include "RRTManager.h"
+#include "Constraint.h"
 
 namespace ccrrt {
 
-class CBiRRT : public ConstrainedRRT
+class CBiRRT : public RRTManager
 {
 public:
     
@@ -20,12 +21,15 @@ public:
     RRT_Result_t growTrees();
     
     bool constraintProjector(JointConfig &config, const JointConfig &parentConfig);
+    bool collisionChecker(const JointConfig &config, const JointConfig &parentConfig);
     
-    void setProjectedConstraints(Constraint* constraints);
+    void setProjectionConstraints(Constraint* constraints);
+    void setRejectionConstraints(Constraint* constraints);
     
 protected:
     
-    Constraint* _projected_constraints;
+    Constraint* _projection_constraints;
+    Constraint* _rejection_constraints;
     
 };
 

@@ -1,7 +1,8 @@
 #ifndef CONSTRAINT_H
 #define CONSTRAINT_H
 
-#include "../ccrrt/Trajectory.h"
+#include <Eigen/Geometry>
+#include <vector>
 
 namespace ccrrt {
 
@@ -18,28 +19,16 @@ public:
         
     } validity_t;
     
-    virtual size_t getJacobian(Eigen::MatrixXd& J, const ccrrt::Trajectory& traj) = 0;
-    
-    virtual validity_t getCostGradient(Eigen::VectorXd& gradient, const Eigen::VectorXd& config) = 0;
-    
-    virtual validity_t getCost(Eigen::VectorXd& cost, 
-                               const ccrrt::Trajectory& traj) = 0;
+    virtual validity_t getCostGradient(Eigen::VectorXd& gradient, 
+                                       const Eigen::VectorXd& parent,
+                                       const Eigen::VectorXd& config,
+                                       const Eigen::VectorXd& target) = 0;
 
-    virtual validity_t getValidity(const ccrrt::Trajectory& traj) = 0;
+    virtual validity_t getValidity(const Eigen::VectorXd& config) = 0;
     
     virtual size_t constraintDimension() const = 0;
     
-
-    // TODO: Consider making this a function of Trajectory instead
-    // Counter-argument: Maybe someone will want their own version of speed calculation for a
-    //                   certain class of constraints?
-    virtual double getSpeed(const ccrrt::Trajectory& traj, size_t waypoint);
-    virtual void getVelocity(Eigen::VectorXd& vel,
-                             const ccrrt::Trajectory& traj,
-                             size_t waypoint);
-    virtual void getAcceleration(Eigen::VectorXd& accel,
-                                 const ccrrt::Trajectory& traj,
-                                 size_t waypoint);
+    std::vector<size_t> elevatorDimensions;
     
 };
 

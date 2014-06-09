@@ -1,7 +1,7 @@
 
 #include "../ccrrt/Drawer.h"
 #include "../ccrrt/ConstraintGroup.h"
-#include "../ccrrt/ChompRRT.h"
+#include "../ccrrt/CBiRRT.h"
 #include "time.h"
 
 using namespace ccrrt;
@@ -9,13 +9,12 @@ using namespace Eigen;
 
 int main(int argc, char* argv[])
 {
-    ChompRRT rrt;
+    CBiRRT rrt;
 
     ConstraintGroup group;
     std::vector<LineConstraint*> line_constraints;
 
     line_constraints.push_back(new LineConstraint(Vector2d(0,-0.1), Vector2d(1,-0.1), 2, 1e-5));
-    rrt.multichomp.max_attempts = 40;
 
     for(size_t i=0; i<line_constraints.size(); ++i)
     {
@@ -26,7 +25,7 @@ int main(int argc, char* argv[])
     Eigen::VectorXd limits(2);
     limits << 5,5;
     rrt.setDomain(-limits, limits);
-    rrt.setConstraints(&group);
+    rrt.setRejectionConstraints(&group);
 
     Eigen::VectorXd p(2);
     p << -1, 0;

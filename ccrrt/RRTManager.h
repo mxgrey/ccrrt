@@ -143,11 +143,12 @@ public:
     const JointConfig& getConfig() const;
     
     RRTNode(JointConfig mConfig, double maxStepSize=0.3, RRTNode* mParent = NULL);
+    ~RRTNode();
 
     void giveParent(RRTNode* newParent);
 
     // If the node does not have a parent, this will return itself
-    const RRTNode* getParent() const;
+    RRTNode* getParent() const;
     // Always check for hasParent() before calling getParent()
     bool hasParent() const;
 
@@ -159,7 +160,7 @@ public:
 
     // Identify the node that's closest and scale down newConfig to be
     // an acceptable child to that node
-    RRTNode& getClosestNodeAndScaleConfig(JointConfig& newConfig);
+    RRTNode& getClosestNode(const JointConfig& newConfig);
     
     // Identify the node that's closest in this subtree and return the rating
     // of that node
@@ -173,6 +174,19 @@ public:
     // acceptable child. childConfig should then be collision tested
     // again.
     RRTNode* attemptAddChild(const JointConfig& childConfig);
+    
+    void giveChild(RRTNode* newChild);
+    
+    // Remove the last child which was given to this node. This is used
+    // to clean up connection attempts where points may have gotten compressed
+    // It requires a pointer to the child which is supposed to be removed
+    // in order to sanity check that the correct node is being removed.
+    void removeLastChild(const RRTNode* child);
+    
+    void replaceChild(const RRTNode* current, RRTNode* newChild);
+    
+    // Similar to removeLastChild, but the child is not deleted
+    void abandonLastChild(const RRTNode* child);
     
     // This will scale the childConfig to be a suitable child but will not
     // attempt to add it as a child.
@@ -190,7 +204,6 @@ protected:
     double maxStepSize_;
 
     bool hasParent_;
-    bool hasChildren_;
     std::vector<RRTNode*> children;
     RRTNode* parent;
     
@@ -236,7 +249,7 @@ public:
     virtual void shortenSolution();
 
     // You should plug a collision checker in here
-    virtual bool collisionChecker(JointConfig& config, const JointConfig& parentConfig);
+    virtual bool collisionChecker(const JointConfig& config, const JointConfig& parentConfig);
 
     // You should use this to impose constraints if desired
     virtual bool constraintProjector(JointConfig& config, const JointConfig& parentConfig);
@@ -292,6 +305,7 @@ protected:
 
     RRTNode* lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t connectTargetType);
     virtual RRTNode* attemptConnect(RRTNode*& node, const JointConfig& target, size_t treeID);
+    virtual void cleanConnection(RRTNode* endNode);
     void constructSolution(const RRTNode* beginTree, const RRTNode* endTree);
     bool _hasSolution;
     bool _invalidRoot;

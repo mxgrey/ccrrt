@@ -5,30 +5,63 @@ using namespace ccrrt;
 using namespace Eigen;
 
 CBiRRT::CBiRRT(int maxTreeSize, double maxStepSize, double collisionCheckStepSize) :
-    ConstrainedRRT(maxTreeSize, maxStepSize, collisionCheckStepSize)
+    RRTManager(maxTreeSize, maxStepSize, collisionCheckStepSize)
 {
-    _projected_constraints = NULL;
+    _projection_constraints = NULL;
+    _rejection_constraints = NULL;
     max_projection_attempts = 100;
-//    gamma = 0.05;
     gamma = 1;
     stuck_distance = maxStepSize/10;
 }
 
-void CBiRRT::setProjectedConstraints(Constraint *constraints)
+void CBiRRT::setRejectionConstraints(Constraint *constraints)
 {
-    _projected_constraints = constraints;
+    _rejection_constraints = constraints;
+}
+
+void CBiRRT::setProjectionConstraints(Constraint *constraints)
+{
+    _projection_constraints = constraints;
+}
+
+bool CBiRRT::collisionChecker(const JointConfig &config, const JointConfig &parentConfig)
+{
+    if(_rejection_constraints==NULL)
+        return true;
+    
+    size_t c = ceil((parentConfig-config).norm()/collisionCheckStepSize_);
+    if( c == 0 )
+        return (_rejection_constraints->getValidity(config) != Constraint::INVALID)
+            && (_projection_constraints->getValidity(config) != Constraint::INVALID);
+    
+    for(size_t i=0; i<c; ++i)
+    {
+        if(_rejection_constraints->getValidity(config + 
+                    (parentConfig-config).normalized()*i/c) == Constraint::INVALID)
+            return false;
+        
+        if(_projection_constraints->getValidity(config +
+                    (parentConfig-config).normalized()*i/c) == Constraint::INVALID)
+            return false;
+    }
+    
+    return true;
 }
 
 bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentConfig)
 {
-    if(_projected_constraints==NULL)
+    if(_projection_constraints==NULL)
         return true;
+    
+    JointConfig target = config;
+    config = parentConfig;
+    stepConfigTowards(config, target);
     
     size_t count=0;
     VectorXd gradient(_domainSize);
-    Constraint::validity_t result = _projected_constraints->getCostGradient(gradient, config);
-//    std::cout << "Test config (" << result << "): "
-//              << config.transpose() << "\t|\t" << gradient.transpose() << std::endl;
+    Constraint::validity_t result = _projection_constraints->getCostGradient(gradient, parentConfig,
+                                                                             config, target);
+
     while(result == Constraint::INVALID)
     {
         if(!checkIfInRange(config, parentConfig))
@@ -38,26 +71,19 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
             return false;
         
         config = config - gamma*gradient;
-        for(size_t i=0; i<_domainSize; ++i)
+        for(int i=0; i<_domainSize; ++i)
         {
             if( config[i] < minConfig[i] || maxConfig[i] < config[i] )
                 return false;
         }
         
-        result = _projected_constraints->getCostGradient(gradient, config);
-
-//        std::cout << "Test config (" << result << "): "
-//                  << config.transpose() << "\t|\t" << gradient.transpose() << std::endl;
-        
+        result = _projection_constraints->getCostGradient(gradient, parentConfig, config, target);
         
         if( (config-parentConfig).norm() < stuck_distance )
             return false;
 
         ++count;
     }
-
-//    std::cout << "Valid config: " << config.transpose()
-//              << "\n _________" << std::endl;
     
     return true;
 }

@@ -39,7 +39,7 @@
 #include "../ccrrt/RRTManager.h"
 #include <ctime>
 
-bool RRTManager::collisionChecker(JointConfig &config, const JointConfig &parentConfig)
+bool RRTManager::collisionChecker(const JointConfig &config, const JointConfig &parentConfig)
 {
     // THIS IS WHERE YOU SHOULD APPLY COLLISION CHECKING. IF THE CONFIGURATION
     // IS ACCEPTABLE, YOU SHOULD RETURN true. IF THE CONFIGURATION IS IN A
@@ -124,7 +124,7 @@ RRT_Result_t RRTManager::growTrees()
         config = refConfig; // reset our config to the refConfig
         
         // Using the reference (&) is VERY important here
-        RRTNode& newParent = trees[i]->getClosestNodeAndScaleConfig(config);
+        RRTNode& newParent = trees[i]->getClosestNode(config);
         if( (newParent.getConfig()-config).norm() < _numPrecThresh )
             continue;
         
@@ -312,9 +312,16 @@ RRTNode::RRTNode(JointConfig mConfig, double maxStepSize, RRTNode *mParent)
 {
     giveParent(mParent);
     maxStepSize_ = maxStepSize;
-    hasChildren_ = false;
     numPrecThresh = 1e-10;
     type = NORMAL;
+}
+
+RRTNode::~RRTNode()
+{
+    for(size_t i=0; i<children.size(); ++i)
+    {
+        delete children[i];
+    }
 }
 
 const JointConfig& RRTNode::getConfig() const
@@ -333,12 +340,9 @@ void RRTNode::giveParent(RRTNode *newParent)
     parent = newParent;
 }
 
-const RRTNode *RRTNode::getParent() const
+RRTNode *RRTNode::getParent() const
 {
-    if(hasParent_)
-        return parent;
-    else
-        return this;
+    return parent;
 }
 bool RRTNode::hasParent() const { return hasParent_; }
 
@@ -350,18 +354,18 @@ const RRTNode *RRTNode::getChild(size_t child) const
     else
         return this;
 }
-bool RRTNode::hasChild() const { return hasChildren_; }
+bool RRTNode::hasChild() const { return children.size() > 0; }
 size_t RRTNode::numChildren() const { return children.size(); }
 
 
-RRTNode& RRTNode::getClosestNodeAndScaleConfig(JointConfig &newConfig)
+RRTNode& RRTNode::getClosestNode(const JointConfig& newConfig)
 {
     RRTNode* closest = NULL;
-    double scale = getClosestNode(closest, newConfig);
+    /*double scale = */getClosestNode(closest, newConfig);
     
-    scale = fabs(scale) < fabs(maxStepSize_) ? fabs(scale) : fabs(maxStepSize_);
-    if(scale > 0)
-        newConfig = closest->config + scale*(newConfig-closest->config).normalized();
+//    scale = fabs(scale) < fabs(maxStepSize_) ? fabs(scale) : fabs(maxStepSize_);
+//    if(scale > 0)
+//        newConfig = closest->config + scale*(newConfig-closest->config).normalized();
 
     return *closest;
 }
@@ -401,6 +405,47 @@ RRTNode *RRTNode::attemptAddChild(const JointConfig &childConfig)
     }
 }
 
+void RRTNode::giveChild(RRTNode *newChild)
+{
+    newChild->giveParent(this);
+    children.push_back(newChild);
+}
+
+void RRTNode::removeLastChild(const RRTNode *child)
+{
+    assert( children.size() > 0
+            && "You may not attempt to remove a node when there are no children!!");
+    
+    assert( children.back() == child 
+            && "You may not attempt to remove a node which was not the last child!!");
+    
+    delete children.back();
+    children.pop_back();
+}
+
+void RRTNode::replaceChild(const RRTNode *current, RRTNode *newChild)
+{
+    for(size_t i=0; i<children.size(); ++i)
+    {
+        if( children[i] == current )
+        {
+            delete children[i];
+            children[i] = newChild;
+            newChild->giveParent(this);
+        }
+    }
+}
+
+void RRTNode::abandonLastChild(const RRTNode *child)
+{
+    assert( children.size() > 0
+            && "You may not attempt to abandon a node when there are no children!!");
+    assert( children.back() == child
+            && "You may not attempt to abandon a node which was not the last child!!");
+    
+    children.pop_back();
+}
+
 bool RRTNode::scaleJointConfig(JointConfig &childConfig)
 {
     if((childConfig-config).norm() > maxStepSize_+numPrecThresh)
@@ -425,7 +470,6 @@ void RRTNode::setMaxStepSize(double newMaxStepSize)
 
 RRTNode *RRTNode::addChild(const JointConfig &childConfig)
 {
-    hasChildren_ = true;
     RRTNode* newChild = new RRTNode(childConfig, maxStepSize_, this);
     children.push_back(newChild);
     return newChild;
@@ -601,17 +645,19 @@ RRTNode* RRTManager::lookForTreeConnection(const RRTNode* targetNode, RRT_Tree_t
 
 RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, size_t treeID)
 {
-    JointConfig currentConfig = node->getConfig();
+    JointConfig currentConfig;/* = node->getConfig();*/
     
     size_t counter=0;
 
     while( (node->getConfig()-target).norm() > _maxStepSize )
     {
-        stepConfigTowards(currentConfig, target);
+//        stepConfigTowards(currentConfig, target);
+        currentConfig = target;
 
         if(!constraintProjector(currentConfig, node->getConfig()))
         {
             node->type = RRTNode::KEY;
+            cleanConnection(node);
             return NULL;
         }
 
@@ -620,6 +666,7 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
         if(!collisionChecker(currentConfig, node->getConfig()))
         {
             node->type = RRTNode::KEY;
+            cleanConnection(node);
             return NULL;
         }
 
@@ -630,6 +677,7 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
         {
             std::cerr << "Attempt connect code is broken!" << std::endl;
             node->type = RRTNode::KEY;
+            cleanConnection(node);
             return NULL;
         }
 
@@ -637,12 +685,50 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
         {
             std::cout << "Overflow in connection attempt" << std::endl;
             node->type = RRTNode::KEY;
+            cleanConnection(node);
             return NULL;
         }
     }
     
     node->type = RRTNode::KEY;
+    cleanConnection(node);
     return node;
+}
+
+void RRTManager::cleanConnection(RRTNode *endNode)
+{
+    RRTNode* pivotNode = endNode->getParent();
+    if( NULL == pivotNode )
+        return;
+    RRTNode* parentNode = pivotNode->getParent();
+    if( NULL == parentNode )
+        return;
+    
+    while( pivotNode->numChildren() == 1 /*&& pivotNode->type != RRTNode::KEY*/)
+    {
+        if( (endNode->config-parentNode->config).norm() <= _maxStepSize )
+        {
+            if( collisionChecker(endNode->config, parentNode->config) )
+            {
+                pivotNode->abandonLastChild(endNode);
+                parentNode->replaceChild(pivotNode, endNode);
+                
+                pivotNode = parentNode;
+                parentNode = pivotNode->getParent();
+                if(NULL == parentNode)
+                    return;
+                continue;
+            }
+        }
+        
+        endNode = endNode->getParent();
+        pivotNode = endNode->getParent();
+        if(NULL == pivotNode)
+            return;
+        parentNode = pivotNode->getParent();
+        if(NULL == parentNode)
+            return;
+    }
 }
 
 void RRTManager::constructSolution(const RRTNode *beginTree, const RRTNode *endTree)

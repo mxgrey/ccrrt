@@ -2,8 +2,6 @@
 #include "../ccrrt/ConstraintGroup.h"
 #include "../ccrrt/BlockConstraint.h"
 
-#include "../ccrrt/ChompRRT.h"
-#include "../ccrrt/ConstrainedRRT.h"
 #include "../ccrrt/CBiRRT.h"
 
 #include "../ccrrt/Drawer.h"
@@ -49,15 +47,15 @@ int main(int argc, char* argv[])
     Eigen::VectorXd limits(2);
     limits << 5,5;
     rrt.setDomain(-limits,limits);
-    rrt.setConstraints(&obst_group);
-    rrt.setProjectedConstraints(&proj_group);
+    rrt.setRejectionConstraints(&obst_group);
+    rrt.setProjectionConstraints(&proj_group);
     
     
     Eigen::VectorXd p(2);
     p << -3, 0;
-    rrt.addStartTree(p);
+    std::cout << "Start: " << rrt.addStartTree(p) << std::endl;
     p << 3, 0;
-    rrt.addGoalTree(p);
+    std::cout << "Goal: " << rrt.addGoalTree(p) << std::endl;
     
     Trajectory vis;
     
