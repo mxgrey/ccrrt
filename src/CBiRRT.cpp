@@ -24,24 +24,37 @@ void CBiRRT::setProjectionConstraints(Constraint *constraints)
     _projection_constraints = constraints;
 }
 
+bool CBiRRT::rejectionChecker(const JointConfig &config)
+{
+    if(NULL == _rejection_constraints)
+        return true;
+    
+    return _rejection_constraints->getValidity(config) != Constraint::INVALID;
+}
+
+bool CBiRRT::projectionChecker(const JointConfig &config)
+{
+    if(NULL == _projection_constraints)
+        return true;
+    
+    return _projection_constraints->getValidity(config) != Constraint::INVALID;
+}
+
 bool CBiRRT::collisionChecker(const JointConfig &config, const JointConfig &parentConfig)
 {
-    if(_rejection_constraints==NULL)
+    if(NULL==_rejection_constraints && NULL==_projection_constraints)
         return true;
     
     size_t c = ceil((parentConfig-config).norm()/collisionCheckStepSize_);
     if( c == 0 )
-        return (_rejection_constraints->getValidity(config) != Constraint::INVALID)
-            && (_projection_constraints->getValidity(config) != Constraint::INVALID);
+        return rejectionChecker(config) && projectionChecker(config);
     
     for(size_t i=0; i<c; ++i)
     {
-        if(_rejection_constraints->getValidity(config + 
-                    (parentConfig-config).normalized()*i/c) == Constraint::INVALID)
+        if(!rejectionChecker(config + (parentConfig-config).normalized()*i/c))
             return false;
         
-        if(_projection_constraints->getValidity(config +
-                    (parentConfig-config).normalized()*i/c) == Constraint::INVALID)
+        if(!projectionChecker(config + (parentConfig-config).normalized()*i/c))
             return false;
     }
     
@@ -51,7 +64,12 @@ bool CBiRRT::collisionChecker(const JointConfig &config, const JointConfig &pare
 bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentConfig)
 {
     if(_projection_constraints==NULL)
+    {
+        JointConfig target = config;
+        config = parentConfig;
+        stepConfigTowards(config, target);
         return true;
+    }
     
     JointConfig target = config;
     config = parentConfig;
@@ -64,6 +82,9 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
 
     while(result == Constraint::INVALID)
     {
+        if(result == Constraint::STUCK)
+            return false;
+        
         if(!checkIfInRange(config, parentConfig))
             return false;
 

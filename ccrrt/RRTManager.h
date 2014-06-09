@@ -295,6 +295,12 @@ public:
     bool checkIfInRange(const JointConfig& configA, const JointConfig& configB);
     bool checkIfInDomain(const JointConfig& config, bool verbose=true);
     bool checkDimensionality(const JointConfig& config, bool verbose=true);
+    
+    double getPathLength(RRTNode* start, RRTNode* end);
+    static double getPathLength(const ConfigPath& path, size_t start, size_t end);
+    
+    // Maximum step size through the jointspace
+    double maxStepSize_;
 
 protected:
 
@@ -318,8 +324,6 @@ protected:
 
     double _numPrecThresh;
 
-    // Maximum step size through the jointspace
-    double _maxStepSize;
 
     std::vector<int> currentTreeSize;
     

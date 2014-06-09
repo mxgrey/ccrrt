@@ -12,10 +12,10 @@ public:
     
     typedef enum {
         
-        INVALID = 0,
+        STUCK = 0,
+        INVALID,
         AT_RISK,
-        VALID,
-        STUCK
+        VALID
         
     } validity_t;
     
@@ -25,10 +25,6 @@ public:
                                        const Eigen::VectorXd& target) = 0;
 
     virtual validity_t getValidity(const Eigen::VectorXd& config) = 0;
-    
-    virtual size_t constraintDimension() const = 0;
-    
-    std::vector<size_t> elevatorDimensions;
     
 };
 

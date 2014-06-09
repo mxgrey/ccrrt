@@ -4,11 +4,6 @@
 
 using namespace ccrrt;
 
-ConstraintGroup::ConstraintGroup()
-{
-    _dimension = 0;
-}
-
 Constraint::validity_t ConstraintGroup::getCostGradient(Eigen::VectorXd& gradient,
                                                         const Eigen::VectorXd& parent,
                                                         const Eigen::VectorXd& config,
@@ -50,14 +45,8 @@ Constraint::validity_t ConstraintGroup::getValidity(const Eigen::VectorXd& confi
     return result;
 }
 
-size_t ConstraintGroup::constraintDimension() const
-{
-    return _dimension;
-}
-
 void ConstraintGroup::addConstraint(Constraint *constraint)
 {
-    _dimension += constraint->constraintDimension();
     _constraints.push_back(constraint);
 }
 

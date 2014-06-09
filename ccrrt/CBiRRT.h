@@ -22,6 +22,8 @@ public:
     
     bool constraintProjector(JointConfig &config, const JointConfig &parentConfig);
     bool collisionChecker(const JointConfig &config, const JointConfig &parentConfig);
+    bool rejectionChecker(const JointConfig& config);
+    bool projectionChecker(const JointConfig& config);
     
     void setProjectionConstraints(Constraint* constraints);
     void setRejectionConstraints(Constraint* constraints);

@@ -61,6 +61,8 @@ bool RRTManager::constraintProjector(JointConfig &config, const JointConfig &par
     // satisfies your constraints). THIS FUNCTION SHOULD RETURN true IF YOU
     // WANT THE RRT PLANNER TO CONTINUE USING THIS CONFIGURATION OR IT SHOULD
     // RETURN FALSE IF YOU WANT THE PLANNER TO ABANDON THIS CONFIGURATION.
+    stepConfigTowards(config, parentConfig);
+    
     return true;
 }
 
@@ -223,43 +225,41 @@ void RRTManager::shortenSolution()
     
     ConfigPath testPlan;
     ConfigPath bufferPlan; bufferPlan.resize(0);
-    bufferPlan.push_back(solvedPlan[0]);
+    bufferPlan.push_back(solvedPlan.front());
     
-    JointConfig startConfig = solvedPlan[0];
-    JointConfig finalConfig = solvedPlan[solvedPlan.size()-1];
+    JointConfig startConfig = solvedPlan.front();
+    const JointConfig& finalConfig = solvedPlan.back();
     JointConfig testConfig, lastTestConfig;
     int startIndex = 0;
     while((startConfig-finalConfig).norm() > _numPrecThresh
-    && (bufferPlan[bufferPlan.size()-1]-finalConfig).norm() > _numPrecThresh)
+    && (bufferPlan.back()-finalConfig).norm() > _numPrecThresh)
     {
-        bool valid;
+        bool valid = false;
         int targetIndex = solvedPlan.size()-1;
+        
         JointConfig targetConfig = finalConfig;
         double remainingNorm = (startConfig-targetConfig).norm();
         while(remainingNorm > _numPrecThresh)
         {
             testPlan.resize(0);
-            
             valid = true;
             
-            testConfig = startConfig;
+            testConfig = targetConfig;
             lastTestConfig = startConfig;
-            while((testConfig-targetConfig).norm() > _numPrecThresh)
+            while((lastTestConfig-targetConfig).norm() > _numPrecThresh)
             {
-                stepConfigTowards(testConfig, targetConfig);
-                
                 //{
                 //   THIS IS WHERE YOU SHOULD PROJECT testConfig TO THE CONSTRAINT
                 //   MANIFOLD (IF YOU ARE DOING CONSTRAINED PLANNING).
                 //   YOU SHOULD SET valid TO FALSE IF YOUR CONSTRAINTS CANNOT
                 //   BE SATISFIED
                 //}
-                valid = valid && constraintProjector(testConfig, lastTestConfig);
+                valid = constraintProjector(testConfig, lastTestConfig);
 
                 if(!valid)
                     break;
                 
-                valid = valid && checkIfInRange(testConfig, lastTestConfig);
+                valid = checkIfInRange(testConfig, lastTestConfig);
                 
                 if(!valid)
                     break;
@@ -270,25 +270,32 @@ void RRTManager::shortenSolution()
                 //
                 //}
                 
-                valid = valid && collisionChecker(testConfig, lastTestConfig);
+                valid = collisionChecker(testConfig, lastTestConfig);
                 
                 if(!valid)
                     break;
                 
                 testPlan.push_back(testConfig);
                 lastTestConfig = testConfig;
+                testConfig = targetConfig;
             }
+            
+            
             
             if(valid)
             {
-                bufferPlan.resize(startIndex+1);
-                for(size_t i=0; i<testPlan.size(); i++)
-                    bufferPlan.push_back(testPlan[i]);
+                if( getPathLength(testPlan, 0, testPlan.size()-1) 
+                       < getPathLength(solvedPlan, startIndex, targetIndex))
+                {
+                    bufferPlan.resize(startIndex+1);
+                    for(size_t i=0; i<testPlan.size(); i++)
+                        bufferPlan.push_back(testPlan[i]);
+                }
                 
                 break;
             }
             
-            targetIndex--;
+            --targetIndex;
             targetConfig = solvedPlan[targetIndex];
             remainingNorm = (startConfig-targetConfig).norm();
         }
@@ -298,14 +305,40 @@ void RRTManager::shortenSolution()
             bufferPlan.push_back(solvedPlan[targetIndex+1]);
         }
         
-        startIndex++;
+        ++startIndex;
         startConfig = bufferPlan[startIndex];
     }
     
     solvedPlan = bufferPlan;
 }
 
+double RRTManager::getPathLength(const ConfigPath &path, size_t start, size_t end)
+{
+    double length = 0;
+    for(size_t i=start; i<end-1; ++i)
+    {
+        length += (path[i+1]-path[i]).norm();
+    }
+    return length;
+}
 
+double RRTManager::getPathLength(RRTNode* start, RRTNode* end)
+{
+    double length = 0;
+    RRTNode* parent = end->getParent();
+    do {
+        
+        if(parent == NULL)
+            return INFINITY;
+        
+        length += (parent->getConfig()-end->getConfig()).norm();
+        end = parent;
+        parent = end->getParent();
+        
+    } while(parent != start);
+    
+    return length;
+}
 
 RRTNode::RRTNode(JointConfig mConfig, double maxStepSize, RRTNode *mParent)
     : config(mConfig)
@@ -490,7 +523,7 @@ RRTNode *RRTNode::addChild(const JointConfig &childConfig)
 RRTManager::RRTManager(int maxTreeSize, double maxStepSize, double collisionCheckStepSize)
     : maxTreeSize_(maxTreeSize),
       collisionCheckStepSize_(collisionCheckStepSize),
-      _maxStepSize(maxStepSize)
+      maxStepSize_(maxStepSize)
 {
     trees.resize(0);
     currentTreeSize.resize(0);
@@ -506,14 +539,14 @@ RRTManager::RRTManager(int maxTreeSize, double maxStepSize, double collisionChec
 
 void RRTManager::setMaxStepSize(double newMaxStepSize)
 {
-    _maxStepSize = newMaxStepSize;
+    maxStepSize_ = newMaxStepSize;
     for(size_t i=0; i<trees.size(); i++)
         trees[i]->setMaxStepSize(newMaxStepSize);
 }
 
 double RRTManager::getMaxStepSize() const
 {
-    return _maxStepSize;
+    return maxStepSize_;
 }
 
 
@@ -547,7 +580,7 @@ int RRTManager::addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType)
         return -3;
     }
 
-    RRTNode* rootNode = new RRTNode(rootNodeConfiguration, _maxStepSize);
+    RRTNode* rootNode = new RRTNode(rootNodeConfiguration, maxStepSize_);
     trees.push_back(rootNode);
     treeSizeCounter.push_back(1);
     treeTypeTracker.push_back(treeType);
@@ -649,7 +682,7 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
     
     size_t counter=0;
 
-    while( (node->getConfig()-target).norm() > _maxStepSize )
+    while( (node->getConfig()-target).norm() > maxStepSize_ )
     {
 //        stepConfigTowards(currentConfig, target);
         currentConfig = target;
@@ -681,7 +714,7 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
             return NULL;
         }
 
-        if(counter++ > 2*(maxConfig-minConfig).norm()/_maxStepSize)
+        if(counter++ > 2*(maxConfig-minConfig).norm()/maxStepSize_)
         {
             std::cout << "Overflow in connection attempt" << std::endl;
             node->type = RRTNode::KEY;
@@ -706,7 +739,7 @@ void RRTManager::cleanConnection(RRTNode *endNode)
     
     while( pivotNode->numChildren() == 1 /*&& pivotNode->type != RRTNode::KEY*/)
     {
-        if( (endNode->config-parentNode->config).norm() <= _maxStepSize )
+        if( (endNode->config-parentNode->config).norm() <= maxStepSize_ )
         {
             if( collisionChecker(endNode->config, parentNode->config) )
             {
@@ -804,18 +837,18 @@ void RRTManager::randomizeConfig(JointConfig &config)
 
 void RRTManager::scaleConfig(JointConfig &config, const JointConfig &parentConfig)
 {
-    if((config-parentConfig).norm() > _maxStepSize+_numPrecThresh)
+    if((config-parentConfig).norm() > maxStepSize_+_numPrecThresh)
     {
-        config = parentConfig + _maxStepSize*(config-parentConfig).normalized();
+        config = parentConfig + maxStepSize_*(config-parentConfig).normalized();
     }
 }
 
 
 void RRTManager::stepConfigTowards(JointConfig &config, const JointConfig &targetConfig)
 {
-    if((targetConfig-config).norm() > _maxStepSize+_numPrecThresh)
+    if((targetConfig-config).norm() > maxStepSize_+_numPrecThresh)
     {
-        config = config + _maxStepSize*(targetConfig-config).normalized();
+        config = config + maxStepSize_*(targetConfig-config).normalized();
     }
     else
     {
@@ -826,7 +859,7 @@ void RRTManager::stepConfigTowards(JointConfig &config, const JointConfig &targe
 
 bool RRTManager::checkIfInRange(const JointConfig &configA, const JointConfig &configB)
 {
-    if((configA-configB).norm() > _maxStepSize+_numPrecThresh)
+    if((configA-configB).norm() > maxStepSize_+_numPrecThresh)
         return false;
     else
         return true;
