@@ -66,15 +66,34 @@ bool RRTManager::constraintProjector(JointConfig &config, const JointConfig &par
     return true;
 }
 
-RRT_Result_t RRTManager::checkStatus() const
+double RRTManager::getElapsedTime() const
 {
-    if(_iterations%50 == 0)
+    return (_latest_time - _start_time)/(double)(CLOCKS_PER_SEC);
+}
+
+RRT_Result_t RRTManager::checkStatus()
+{
+    if(_first_iteration)
     {
+        _start_time = clock();
+        _last_report = clock();
+        _first_iteration = false;
+    }
+
+    _latest_time = clock();
+
+    if( (report_frequency!=0) &&
+            (_latest_time-_last_report)/(double)(CLOCKS_PER_SEC) >= report_frequency)
+    {
+        _last_report = clock();
         std::cout << "Progress: ";
         for(size_t i=0; i<trees.size(); ++i)
         {
             std::cout << "Tree " << i << ": " << treeSizeCounter[i] << " | ";
         }
+
+        std::cout << " Elapsed time: " << getElapsedTime();
+
         std::cout << std::endl;
     }
     
@@ -95,6 +114,9 @@ RRT_Result_t RRTManager::checkStatus() const
 
     if(checkIfAllMaxed())
         return RRT_TREES_MAXED;
+
+    if( (timeout != 0) && getElapsedTime() > timeout )
+        return RRT_TIMEOUT;
 
     return RRT_NOT_FINISHED;
 }
@@ -231,9 +253,19 @@ void RRTManager::shortenSolution()
     const JointConfig& finalConfig = solvedPlan.back();
     JointConfig testConfig, lastTestConfig;
     int startIndex = 0;
+
+    size_t inner=0, middle=0, outer=0;
+
     while((startConfig-finalConfig).norm() > _numPrecThresh
     && (bufferPlan.back()-finalConfig).norm() > _numPrecThresh)
     {
+        ++outer;
+        middle = 0;
+//        std::cout << "outer: " << outer
+//                  << " | middle: " << middle
+//                  << " | inner: " << inner << std::endl;
+
+
         bool valid = false;
         int targetIndex = solvedPlan.size()-1;
         
@@ -241,6 +273,12 @@ void RRTManager::shortenSolution()
         double remainingNorm = (startConfig-targetConfig).norm();
         while(remainingNorm > _numPrecThresh)
         {
+            ++middle;
+            inner = 0;
+//            std::cout << "outer: " << outer
+//                      << " | middle: " << middle
+//                      << " | inner: " << inner << std::endl;
+
             testPlan.resize(0);
             valid = true;
             
@@ -248,6 +286,10 @@ void RRTManager::shortenSolution()
             lastTestConfig = startConfig;
             while((lastTestConfig-targetConfig).norm() > _numPrecThresh)
             {
+                ++inner;
+//                std::cout << "outer: " << outer
+//                          << " | middle: " << middle
+//                          << " | inner: " << inner << std::endl;
                 //{
                 //   THIS IS WHERE YOU SHOULD PROJECT testConfig TO THE CONSTRAINT
                 //   MANIFOLD (IF YOU ARE DOING CONSTRAINED PLANNING).
@@ -284,7 +326,7 @@ void RRTManager::shortenSolution()
             
             if(valid)
             {
-                if( getPathLength(testPlan, 0, testPlan.size()-1) 
+                if( getPathLength(testPlan, 0, testPlan.size()-1)
                        < getPathLength(solvedPlan, startIndex, targetIndex))
                 {
                     bufferPlan.resize(startIndex+1);
@@ -314,9 +356,42 @@ void RRTManager::shortenSolution()
 
 double RRTManager::getPathLength(const ConfigPath &path, size_t start, size_t end)
 {
+    if(end >= path.size())
+    {
+        std::cout << "WARNING: Requesting path length up to index " << end << ", but the path "
+                  << "only goes up to " << path.size()-1 << std::endl;
+        end = path.size()-1;
+    }
+
+    if(start >= path.size())
+    {
+        std::cout << "WARNING: Requesting path length starting at index "
+                  << start << ", but the path "
+                  << "only goes up to " << path.size()-1 << std::endl;
+        start = path.size()-1;
+    }
+
+    if( start > end )
+    {
+        std::cout << "WARNING: Swapping start (" << start
+                  << ") and end (" << end << ")" << std::endl;
+        size_t store = start;
+        start = end;
+        end = store;
+    }
+
+    if( start == end )
+        return 0;
+
     double length = 0;
     for(size_t i=start; i<end-1; ++i)
     {
+        if(path[i+1].size() != path[i].size())
+        {
+            std::cout << "Invalid size for config " << i+1 << " out of " << path.size()
+                      << " with start " << start << " and end " << end << std::endl;
+        }
+
         length += (path[i+1]-path[i]).norm();
     }
     return length;
@@ -527,9 +602,12 @@ RRTManager::RRTManager(int maxTreeSize, double maxStepSize, double collisionChec
 {
     trees.resize(0);
     currentTreeSize.resize(0);
+    report_frequency = 5;
+    timeout = 0;
     _hasSolution = false;
     _hasDomain = false;
     _invalidRoot = false;
+    _first_iteration = true;
     srand(time(NULL));
     maxTotalNodes_ = -1;
     maxIterations_ = -1;

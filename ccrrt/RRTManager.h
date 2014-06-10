@@ -44,6 +44,8 @@
 #include <iostream>
 #include <vector>
 
+#include <time.h>
+
 #include <math.h>
 
 typedef Eigen::VectorXd JointConfig;
@@ -58,6 +60,7 @@ typedef enum {
     RRT_NO_DOMAIN,          ///> The user has neglected to define a domain for the search
     RRT_REACHED_ITER_LIMIT, ///> The growTree() has reached its iteration limit
     RRT_INVALID_ROOT,       ///> The root of one of your trees is in an invalid configuration
+    RRT_TIMEOUT,
 
     RRT_RESULT_SIZE
 
@@ -71,7 +74,8 @@ static const char *RRT_Result_string[RRT_RESULT_SIZE] =
     "RRT_REACHED_MAX_NODES",
     "RRT_NO_DOMAIN",
     "RRT_REACHED_ITER_LIMIT",
-    "RRT_INVALID_ROOT"
+    "RRT_INVALID_ROOT",
+    "RRT_TIMEOUT"
 };
 
 inline std::string RRT_Result_to_string(RRT_Result_t result)
@@ -219,6 +223,14 @@ public:
                double maxStepSize=0.3,
                double collisionCheckStepSize=0.3);
 
+    double report_frequency;
+
+    // Give up after spending this much time. A value of 0
+    // means it will never timeout. Default value is 0.
+    double timeout;
+
+    double getElapsedTime() const;
+
     void setDomain(const JointConfig& minJointConfig,
                    const JointConfig& maxJointConfig,
                    unsigned long resolution=10000000);
@@ -241,7 +253,7 @@ public:
     // Or it returns -3 if the constraintProjector was unsatisfied
     int addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType);
 
-    virtual RRT_Result_t checkStatus() const;
+    virtual RRT_Result_t checkStatus();
     // Add a node to each tree while checking for connections between trees
     virtual RRT_Result_t growTrees();
     
@@ -303,6 +315,11 @@ public:
     double maxStepSize_;
 
 protected:
+
+    bool _first_iteration;
+    clock_t _start_time;
+    clock_t _latest_time;
+    clock_t _last_report;
 
     std::vector<RRTNode*> trees;
     std::vector<int> treeSizeCounter;

@@ -9,7 +9,7 @@ CBiRRT::CBiRRT(int maxTreeSize, double maxStepSize, double collisionCheckStepSiz
 {
     _projection_constraints = NULL;
     _rejection_constraints = NULL;
-    max_projection_attempts = 100;
+    max_projection_attempts = 20;
     gamma = 1;
     stuck_distance = maxStepSize/10;
 }
