@@ -79,6 +79,8 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
     VectorXd gradient(_domainSize);
     Constraint::validity_t result = _projection_constraints->getCostGradient(gradient, parentConfig,
                                                                              config, target);
+    if(result == Constraint::STUCK)
+        return false;
 
     while(result == Constraint::INVALID)
     {

@@ -249,8 +249,8 @@ public:
     // Add any kind of tree you would like
     // Returns the tree index of this new tree
     // Or it returns -1 if it was outside the domain
-    // Or it returns -2 if a collision was detected
-    // Or it returns -3 if the constraintProjector was unsatisfied
+    // Or it returns -2 if the constraintProjector was unsatisfied
+    // Or it returns -3 if a collision was detected
     int addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType);
 
     virtual RRT_Result_t checkStatus();

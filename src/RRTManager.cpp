@@ -645,14 +645,14 @@ int RRTManager::addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType)
         _invalidRoot = true;
         return -1;
     }
-
-    if(!collisionChecker(rootNodeConfiguration, rootNodeConfiguration))
+    
+    if(!constraintProjector(rootNodeConfiguration, rootNodeConfiguration))
     {
         _invalidRoot = true;
         return -2;
     }
 
-    if(!constraintProjector(rootNodeConfiguration, rootNodeConfiguration))
+    if(!collisionChecker(rootNodeConfiguration, rootNodeConfiguration))
     {
         _invalidRoot = true;
         return -3;
