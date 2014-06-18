@@ -40,6 +40,14 @@ bool CBiRRT::projectionChecker(const JointConfig &config)
     return _projection_constraints->getValidity(config) != Constraint::INVALID;
 }
 
+void dummyfunction(JointConfig col, JointConfig config, JointConfig parentConfig, size_t i, size_t c)
+{
+    std::cout << "col: " << col.transpose() 
+              << "\ncon: " << config.transpose()
+              << "\npar: " << parentConfig.transpose() 
+              << "\n i,c: " << i << " | " << c << std::endl;
+}
+
 bool CBiRRT::collisionChecker(const JointConfig &config, const JointConfig &parentConfig)
 {
     if(NULL==_rejection_constraints && NULL==_projection_constraints)
@@ -51,10 +59,16 @@ bool CBiRRT::collisionChecker(const JointConfig &config, const JointConfig &pare
     
     for(size_t i=0; i<c; ++i)
     {
-        if(!rejectionChecker(config + (parentConfig-config).normalized()*i/c))
+        _col_step = config + (parentConfig-config)*(double)(i)/(double)(c);
+        
+//        std::cout << " C: " << ceil((parentConfig-config).norm()/collisionCheckStepSize_)
+//                     << std::endl;
+//        dummyfunction(_col_step, config, parentConfig, i, c);
+        
+        if(!projectionChecker(_col_step))
             return false;
         
-        if(!projectionChecker(config + (parentConfig-config).normalized()*i/c))
+        if(!rejectionChecker(_col_step))
             return false;
     }
     
@@ -93,7 +107,19 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
         if(count > max_projection_attempts)
             return false;
         
+        if(!checkForNan(gradient))
+        {
+            std::cout << "NANS IN GRADIENT: " << gradient.transpose() << std::endl;
+            std::cout << "config: " << config.transpose() << std::endl;
+            return false;
+        }
+        
         config = config - gamma*gradient;
+        if(!checkForNan(config))
+        {
+            std::cout << "NANS NANS NANS!!!: " << config.transpose() << std::endl;
+            return false;
+        }
         for(int i=0; i<_domainSize; ++i)
         {
             if( config[i] < minConfig[i] || maxConfig[i] < config[i] )
@@ -101,6 +127,7 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
         }
         
         result = _projection_constraints->getCostGradient(gradient, parentConfig, config, target);
+        
         
         if( (config-parentConfig).norm() < stuck_distance )
             return false;

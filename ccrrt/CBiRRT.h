@@ -33,6 +33,7 @@ protected:
     Constraint* _projection_constraints;
     Constraint* _rejection_constraints;
     
+    Eigen::VectorXd _col_step;
 };
 
 } // namespace ccrrt

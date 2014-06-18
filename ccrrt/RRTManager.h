@@ -307,6 +307,7 @@ public:
     bool checkIfInRange(const JointConfig& configA, const JointConfig& configB);
     bool checkIfInDomain(const JointConfig& config, bool verbose=true);
     bool checkDimensionality(const JointConfig& config, bool verbose=true);
+    static bool checkForNan(const JointConfig& config);
     
     double getPathLength(RRTNode* start, RRTNode* end);
     static double getPathLength(const ConfigPath& path, size_t start, size_t end);

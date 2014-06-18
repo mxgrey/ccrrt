@@ -981,3 +981,13 @@ bool RRTManager::checkDimensionality(const JointConfig &config, bool verbose)
     }
     return true;
 }
+
+bool RRTManager::checkForNan(const JointConfig &config)
+{
+    for(int i=0; i<config.size(); ++i)
+    {
+        if(config[i] != config[i])
+            return false;
+    }
+    return true;
+}
