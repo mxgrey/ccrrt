@@ -233,6 +233,81 @@ RRT_Result_t RRTManager::growTrees()
     return RRT_NOT_FINISHED;
 }
 
+void RRTManager::quickShortenSolution(size_t shortcuts)
+{
+    if(!_hasSolution)
+    {
+        std::cerr << "Cannot shorten a solution that doesn't exist!" << std::endl;
+        return;
+    }
+    
+    ConfigPath bufferPlan;    
+    
+    for(size_t attempts=0; attempts < shortcuts; ++attempts)
+    {
+        size_t p1 = rand()%solvedPlan.size();
+        size_t p2 = rand()%solvedPlan.size();
+        
+        if( p1 > p2 )
+            std::swap<size_t>(p1, p2);
+        
+        bufferPlan.resize(0);
+        for(size_t i=0; i<p1; ++i)
+            bufferPlan.push_back(solvedPlan[i]);
+        
+        bool success = true;
+        
+        const JointConfig& target = solvedPlan[p2];
+        JointConfig currentConfig = solvedPlan[p1];
+        JointConfig lastConfig;
+        size_t counter=0;
+        while( (currentConfig-target).norm() > maxStepSize_ )
+        {
+            ++counter;
+            lastConfig = currentConfig;
+            currentConfig = target;
+            if(!constraintProjector(currentConfig, lastConfig))
+            {
+                std::cout << "Constraint projector failed on " << counter 
+                          << " iteration of attempt #" << attempts << std::endl;
+                success = false;
+                break;
+            }
+            
+            scaleConfig(currentConfig, lastConfig);
+            
+            if(!collisionChecker(currentConfig, lastConfig))
+            {
+                std::cout << "Collision checker failed on " << counter 
+                          << " iteration of attempt #" << attempts << std::endl;
+                success = false;
+                break;
+            }
+            
+            bufferPlan.push_back(currentConfig);
+            
+            if( counter > 100*(maxConfig-minConfig).norm()/maxStepSize_)
+            {
+                std::cout << "Massive overflow in connection on " << counter
+                          << " iteration of attempt #" << attempts << std::endl;
+                success = false;
+                break;
+            }
+        }
+        
+        if( success && (
+                getPathLength(bufferPlan, p1, bufferPlan.size()-1) <
+                getPathLength(solvedPlan, p1, p2) ) )
+        {
+            for(size_t p=p2; p<solvedPlan.size(); ++p)
+                bufferPlan.push_back(solvedPlan[p]);
+            
+            solvedPlan = bufferPlan;
+            std::cout << "Successful shorten!" << std::endl;
+        }
+    }
+}
+
 void RRTManager::shortenSolution()
 {
     // JUST LIKE growTree() YOU WILL NEED TO OVERWRITE THIS FUNCTION AFTER YOU HAVE
