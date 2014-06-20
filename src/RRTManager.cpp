@@ -245,14 +245,14 @@ void RRTManager::quickShortenSolution(size_t shortcuts)
     
     for(size_t attempts=0; attempts < shortcuts; ++attempts)
     {
-        size_t p1 = rand()%solvedPlan.size();
-        size_t p2 = rand()%solvedPlan.size();
+        size_t p1 = rand()%(solvedPlan.size()-1);
+        size_t p2 = rand()%(solvedPlan.size()-1);
         
         if( p1 > p2 )
             std::swap<size_t>(p1, p2);
         
         bufferPlan.resize(0);
-        for(size_t i=0; i<p1; ++i)
+        for(size_t i=0; i<=p1; ++i)
             bufferPlan.push_back(solvedPlan[i]);
         
         bool success = true;
@@ -268,8 +268,8 @@ void RRTManager::quickShortenSolution(size_t shortcuts)
             currentConfig = target;
             if(!constraintProjector(currentConfig, lastConfig))
             {
-                std::cout << "Constraint projector failed on " << counter 
-                          << " iteration of attempt #" << attempts << std::endl;
+//                std::cout << "Constraint projector failed on " << counter
+//                          << " iteration of attempt #" << attempts << std::endl;
                 success = false;
                 break;
             }
@@ -278,8 +278,8 @@ void RRTManager::quickShortenSolution(size_t shortcuts)
             
             if(!collisionChecker(currentConfig, lastConfig))
             {
-                std::cout << "Collision checker failed on " << counter 
-                          << " iteration of attempt #" << attempts << std::endl;
+//                std::cout << "Collision checker failed on " << counter
+//                          << " iteration of attempt #" << attempts << std::endl;
                 success = false;
                 break;
             }
@@ -295,15 +295,16 @@ void RRTManager::quickShortenSolution(size_t shortcuts)
             }
         }
         
-        if( success && (
-                getPathLength(bufferPlan, p1, bufferPlan.size()-1) <
-                getPathLength(solvedPlan, p1, p2) ) )
+        if(success)
         {
-            for(size_t p=p2; p<solvedPlan.size(); ++p)
-                bufferPlan.push_back(solvedPlan[p]);
-            
-            solvedPlan = bufferPlan;
-            std::cout << "Successful shorten!" << std::endl;
+            if( getPathLength(bufferPlan, p1, bufferPlan.size()-1)
+                    < getPathLength(solvedPlan, p1, p2) )
+            {
+                for(size_t p=p2; p<solvedPlan.size(); ++p)
+                    bufferPlan.push_back(solvedPlan[p]);
+
+                solvedPlan = bufferPlan;
+            }
         }
     }
 }
