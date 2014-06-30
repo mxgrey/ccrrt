@@ -245,8 +245,8 @@ void RRTManager::quickShortenSolution(size_t shortcuts)
     
     for(size_t attempts=0; attempts < shortcuts; ++attempts)
     {
-        size_t p1 = rand()%(solvedPlan.size()-1);
-        size_t p2 = rand()%(solvedPlan.size()-1);
+        size_t p1 = attempts==0? 0 : rand()%(solvedPlan.size()-1);
+        size_t p2 = attempts==0? solvedPlan.size()-1 : rand()%(solvedPlan.size()-1);
         
         if( p1 > p2 )
             std::swap<size_t>(p1, p2);
@@ -722,11 +722,11 @@ int RRTManager::addTree(JointConfig rootNodeConfiguration, RRT_Tree_t treeType)
         return -1;
     }
     
-    if(!constraintProjector(rootNodeConfiguration, rootNodeConfiguration))
-    {
-        _invalidRoot = true;
-        return -2;
-    }
+//    if(!constraintProjector(rootNodeConfiguration, rootNodeConfiguration))
+//    {
+//        _invalidRoot = true;
+//        return -2;
+//    }
 
     if(!collisionChecker(rootNodeConfiguration, rootNodeConfiguration))
     {
@@ -845,6 +845,7 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
         {
             node->type = RRTNode::KEY;
             cleanConnection(node);
+//            std::cout << "Projection failed" << std::endl;
             return NULL;
         }
 
@@ -854,6 +855,7 @@ RRTNode* RRTManager::attemptConnect(RRTNode*& node, const JointConfig& target, s
         {
             node->type = RRTNode::KEY;
             cleanConnection(node);
+//            std::cout << "Collision failed" << std::endl;
             return NULL;
         }
 

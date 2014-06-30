@@ -9,7 +9,7 @@ CBiRRT::CBiRRT(int maxTreeSize, double maxStepSize, double collisionCheckStepSiz
 {
     _projection_constraints = NULL;
     _rejection_constraints = NULL;
-    max_projection_attempts = 20;
+    max_projection_attempts = 200;
     gamma = 1;
     stuck_distance = maxStepSize/10;
 }
@@ -99,13 +99,22 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
     while(result == Constraint::INVALID)
     {
         if(result == Constraint::STUCK)
+        {
+            std::cout << "stuck" << std::endl;
             return false;
+        }
         
         if(!checkIfInRange(config, parentConfig))
+        {
+            std::cout << "OUT OF REACH (" << count << ")" << std::endl;
             return false;
+        }
 
         if(count > max_projection_attempts)
+        {
+//            std::cout << "too many attempts" << std::endl;
             return false;
+        }
         
         if(!checkForNan(gradient))
         {
@@ -115,6 +124,7 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
         }
         
         config = config - gamma*gradient;
+        scaleConfig(config, parentConfig);
         if(!checkForNan(config))
         {
             std::cout << "NANS NANS NANS!!!: " << config.transpose() << std::endl;
@@ -123,14 +133,20 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
         for(int i=0; i<_domainSize; ++i)
         {
             if( config[i] < minConfig[i] || maxConfig[i] < config[i] )
+            {
+                std::cout << "outside joint limits" << std::endl;
                 return false;
+            }
         }
         
         result = _projection_constraints->getCostGradient(gradient, parentConfig, config, target);
         
         
         if( (config-parentConfig).norm() < stuck_distance )
+        {
+            std::cout << "within stuck distance" << std::endl;
             return false;
+        }
 
         ++count;
     }
