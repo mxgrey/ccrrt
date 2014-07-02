@@ -9,7 +9,7 @@ CBiRRT::CBiRRT(int maxTreeSize, double maxStepSize, double collisionCheckStepSiz
 {
     _projection_constraints = NULL;
     _rejection_constraints = NULL;
-    max_projection_attempts = 200;
+    max_projection_attempts = 500;
     gamma = 1;
     stuck_distance = maxStepSize/10;
 }
@@ -134,7 +134,7 @@ bool CBiRRT::constraintProjector(JointConfig &config, const JointConfig &parentC
         {
             if( config[i] < minConfig[i] || maxConfig[i] < config[i] )
             {
-                std::cout << "outside joint limits" << std::endl;
+                std::cout << "outside joint limits (" << i << ")" << std::endl;
                 return false;
             }
         }
