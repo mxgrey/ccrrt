@@ -233,18 +233,28 @@ RRT_Result_t RRTManager::growTrees()
     return RRT_NOT_FINISHED;
 }
 
-void RRTManager::quickShortenSolution(size_t shortcuts)
+void RRTManager::quickShortenSolution(size_t shortcuts, double max_time)
 {
     if(!_hasSolution)
     {
         std::cerr << "Cannot shorten a solution that doesn't exist!" << std::endl;
         return;
     }
+
+    clock_t start_time = clock();
+    clock_t latest_time;
     
     ConfigPath bufferPlan;    
     
     for(size_t attempts=0; attempts < shortcuts; ++attempts)
     {
+        latest_time = clock();
+        if( max_time>0 && (latest_time-start_time)/(double)(CLOCKS_PER_SEC) > max_time )
+        {
+            std::cout << "Time ran out for shortening" << std::endl;
+            return;
+        }
+
         size_t p1 = attempts==0? 0 : rand()%(solvedPlan.size()-1);
         size_t p2 = attempts==0? solvedPlan.size()-1 : rand()%(solvedPlan.size()-1);
         

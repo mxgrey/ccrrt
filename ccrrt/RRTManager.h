@@ -259,7 +259,7 @@ public:
     
     // Once a solution is found, you will want to apply shortening to it
     virtual void shortenSolution();
-    virtual void quickShortenSolution(size_t shortcuts=100);
+    virtual void quickShortenSolution(size_t shortcuts=100, double max_time=0);
 
     // You should plug a collision checker in here
     virtual bool collisionChecker(const JointConfig& config, const JointConfig& parentConfig);
